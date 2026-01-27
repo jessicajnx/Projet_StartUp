@@ -230,7 +230,7 @@ export default function ScanLivrePage() {
                 
                 {bookInfo.note && (
                   <div style={styles.infoNote}>
-                    ℹ{bookInfo.note}
+                    {bookInfo.note}
                   </div>
                 )}
                 
