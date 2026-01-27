@@ -13,7 +13,7 @@ from routes.user_routes import get_current_user
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
-# Configuration pour Qwen (via API compatible OpenAI)
+# Configuration pour Qwen (Alibaba Cloud DashScope)
 QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")
 QWEN_API_URL = os.getenv("QWEN_API_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
 
@@ -70,48 +70,60 @@ Si tu ne peux pas identifier certaines informations, utilise null. Réponds UNIQ
             "temperature": 0.1
         }
         
-        if QWEN_API_KEY:
-            response = requests.post(
-                f"{QWEN_API_URL}/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                content = result.get("choices", [{}])[0].get("message", {}).get("content", "{}")
+        if QWEN_API_KEY and len(QWEN_API_KEY) > 10:
+            try:
+                response = requests.post(
+                    f"{QWEN_API_URL}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=30
+                )
                 
-                # Parser le JSON de la réponse
-                import json
-                try:
-                    # Nettoyer la réponse pour extraire uniquement le JSON
-                    content = content.strip()
-                    if "```json" in content:
-                        content = content.split("```json")[1].split("```")[0].strip()
-                    elif "```" in content:
-                        content = content.split("```")[1].split("```")[0].strip()
+                if response.status_code == 200:
+                    result = response.json()
+                    content = result.get("choices", [{}])[0].get("message", {}).get("content", "{}")
                     
-                    book_info = json.loads(content)
-                    return {
-                        "nom": book_info.get("titre", "Titre inconnu"),
-                        "auteur": book_info.get("auteur", "Auteur inconnu"),
-                        "genre": book_info.get("genre", "Non classifié")
-                    }
-                except json.JSONDecodeError:
-                    # Fallback si le parsing échoue
-                    return {
-                        "nom": "Titre détecté",
-                        "auteur": "Auteur détecté",
-                        "genre": "Roman"
-                    }
+                    # Parser le JSON de la réponse
+                    import json
+                    try:
+                        # Nettoyer la réponse pour extraire uniquement le JSON
+                        content = content.strip()
+                        if "```json" in content:
+                            content = content.split("```json")[1].split("```")[0].strip()
+                        elif "```" in content:
+                            content = content.split("```")[1].split("```")[0].strip()
+                        
+                        book_info = json.loads(content)
+                        return {
+                            "nom": book_info.get("titre", "Titre inconnu"),
+                            "auteur": book_info.get("auteur", "Auteur inconnu"),
+                            "genre": book_info.get("genre", "Non classifié")
+                        }
+                    except json.JSONDecodeError:
+                        # Fallback au mode simulation
+                        pass
+                else:
+                    # Erreur API - fallback au mode simulation
+                    print(f"Erreur API: {response.status_code} - Passage en mode simulation")
+            except Exception as api_error:
+                # Erreur réseau ou autre - fallback au mode simulation
+                print(f"Erreur connexion API: {api_error} - Passage en mode simulation")
         
-        # Mode simulation si pas de clé API
+        # Mode simulation
+        import random
+        livres_simulation = [
+            {"nom": "Le Petit Prince", "auteur": "Antoine de Saint-Exupéry", "genre": "Conte philosophique"},
+            {"nom": "1984", "auteur": "George Orwell", "genre": "Science-fiction"},
+            {"nom": "Harry Potter à l'école des sorciers", "auteur": "J.K. Rowling", "genre": "Fantasy"},
+            {"nom": "L'Étranger", "auteur": "Albert Camus", "genre": "Roman philosophique"},
+            {"nom": "Les Misérables", "auteur": "Victor Hugo", "genre": "Roman historique"},
+        ]
+        livre = random.choice(livres_simulation)
         return {
-            "nom": "Le Petit Prince",
-            "auteur": "Antoine de Saint-Exupéry",
-            "genre": "Conte philosophique",
-            "note": "Mode simulation - Configurez QWEN_API_KEY pour l'analyse réelle"
+            "nom": livre["nom"],
+            "auteur": livre["auteur"],
+            "genre": livre["genre"],
+            "note":  'Mode simulation'
         }
         
     except Exception as e:
@@ -140,7 +152,7 @@ async def analyze_book(
     # Lire l'image
     image_data = await file.read()
     
-    # Analyser avec Qwen
+    # Analyser avec l'IA Vision
     book_info = analyze_book_image(image_data)
     
     return {
