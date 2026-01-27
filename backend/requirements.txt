@@ -9,3 +9,6 @@ python-multipart
 pydantic[email]
 cryptography
 python-dotenv
+Pillow
+requests
+openai

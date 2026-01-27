@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { authAPI } from "@/lib/api";
+import { authAPI, userAPI } from "@/lib/api";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -39,6 +39,13 @@ export default function Login() {
       const token = res.data?.access_token;
       if (typeof window !== "undefined" && token) {
         localStorage.setItem("token", token);
+        
+        // Récupérer les informations de l'utilisateur
+        const userRes = await userAPI.getMe();
+        const userName = userRes.data?.name;
+        if (userName) {
+          localStorage.setItem("userName", userName);
+        }
         
         // Décoder le token pour récupérer le rôle
         const decoded = decodeToken(token);

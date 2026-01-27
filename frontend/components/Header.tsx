@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, type CSSProperties } from 'react';
 
 type HeaderProps = {
@@ -10,19 +10,30 @@ type HeaderProps = {
 
 export default function Header({ hideAuthActions = false }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState('');
 
+  // Vérifier l'état d'authentification à chaque changement de route
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const name = localStorage.getItem('userName');
-    setIsAuthenticated(!!token);
-    if (name) setUserName(name);
-  }, []);
+    const checkAuth = () => {
+      const token = localStorage.getItem('token');
+      const name = localStorage.getItem('userName');
+      setIsAuthenticated(!!token);
+      if (name) setUserName(name);
+    };
+    
+    checkAuth();
+    
+    // Écouter les changements dans localStorage
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
+  }, [pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userName');
+    localStorage.removeItem('userId');
     setIsAuthenticated(false);
     router.push('/');
   };
@@ -41,13 +52,15 @@ export default function Header({ hideAuthActions = false }: HeaderProps) {
                 <Link href="/profil" style={styles.link}>
                   Profil
                 </Link>
+                <Link href="/scan-livre" style={styles.link}>
+                  Scanner un livre
+                </Link>
                 <Link href="/bibliotheque-personnelle" style={styles.link}>
                   Ma Bibliothèque
                 </Link>
                 <Link href="/messagerie" style={styles.link}>
                   Conversation
                 </Link>
-                <span style={styles.userName}>Bonjour, {userName}</span>
                 <button onClick={handleLogout} style={styles.button}>
                   Déconnexion
                 </button>

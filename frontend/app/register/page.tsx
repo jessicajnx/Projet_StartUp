@@ -6,6 +6,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { authAPI } from "@/lib/api";
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/;
+
 const formatError = (err: any): string => {
   const detail = err?.response?.data?.detail;
   if (!detail) {
@@ -49,9 +52,19 @@ export default function Register() {
     setSuccess(null);
     setLoading(true);
     const ageNumber = Number(form.age);
-    if (!Number.isFinite(ageNumber) || ageNumber <= 0) {
+    if (!Number.isFinite(ageNumber) || ageNumber < 0) {
       setLoading(false);
       setError("Âge invalide");
+      return;
+    }
+    if (!emailRegex.test(form.email)) {
+      setLoading(false);
+      setError("Email invalide (format requis: nom@domaine.ext)");
+      return;
+    }
+    if (!passwordRegex.test(form.mdp)) {
+      setLoading(false);
+      setError("Mot de passe: 8+ caractères, 1 majuscule, 1 minuscule, 1 chiffre, 1 spécial");
       return;
     }
     try {
@@ -133,6 +146,7 @@ export default function Register() {
               <input
                 type="password"
                 value={form.mdp}
+                pattern={passwordRegex.source}
                 onChange={(e) => handleChange("mdp", e.target.value)}
                 className="input"
                 required

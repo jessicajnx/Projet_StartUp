@@ -41,6 +41,27 @@ def get_current_user_livres(current_user: User = Depends(get_current_user), db: 
     user = db.query(User).filter(User.id == current_user.id).first()
     return user.livres
 
+@router.put("/me", response_model=UserSchema)
+def update_current_user(user_update: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Permet à un utilisateur de modifier son propre profil"""
+    update_data = user_update.dict(exclude_unset=True)
+    
+    # Hash du mot de passe si fourni
+    if "mdp" in update_data and update_data["mdp"]:
+        from auth import get_password_hash
+        update_data["mdp"] = get_password_hash(update_data["mdp"])
+    
+    # Empêcher la modification du rôle par un utilisateur normal
+    if "role" in update_data and current_user.role != "Admin":
+        del update_data["role"]
+    
+    for key, value in update_data.items():
+        setattr(current_user, key, value)
+    
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
 @router.get("/", response_model=List[UserSchema])
 def get_all_users(db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     users = db.query(User).all()
