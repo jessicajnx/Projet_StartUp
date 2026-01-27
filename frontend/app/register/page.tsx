@@ -32,7 +32,6 @@ export default function Register() {
     villes: "",
     age: "",
     mdp: "",
-    role: "Pauvre",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +56,7 @@ export default function Register() {
       await authAPI.register({
         ...form,
         age: ageNumber,
+        role: "Pauvre",
       });
       setSuccess("Compte créé. Vous pouvez vous connecter.");
       setTimeout(() => router.push("/login"), 600);
@@ -68,97 +68,92 @@ export default function Register() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-12">
-      <h1 className="mb-6 text-2xl font-semibold">Inscription</h1>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm">
-          Prénom
-          <input
-            value={form.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            className="rounded border px-3 py-2"
-            required
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Nom
-          <input
-            value={form.surname}
-            onChange={(e) => handleChange("surname", e.target.value)}
-            className="rounded border px-3 py-2"
-            required
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Email
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) => handleChange("email", e.target.value)}
-            className="rounded border px-3 py-2"
-            required
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Ville
-          <input
-            value={form.villes}
-            onChange={(e) => handleChange("villes", e.target.value)}
-            className="rounded border px-3 py-2"
-            required
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Âge
-          <input
-            type="number"
-            min={0}
-            value={form.age}
-            onChange={(e) => handleChange("age", e.target.value)}
-            className="rounded border px-3 py-2"
-            required
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Rôle
-          <select
-            value={form.role}
-            onChange={(e) => handleChange("role", e.target.value)}
-            className="rounded border px-3 py-2"
-          >
-            <option value="Pauvre">Pauvre</option>
-            <option value="Admin">Admin</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm md:col-span-2">
-          Mot de passe
-          <input
-            type="password"
-            value={form.mdp}
-            onChange={(e) => handleChange("mdp", e.target.value)}
-            className="rounded border px-3 py-2"
-            required
-          />
-        </label>
-        {error && <p className="md:col-span-2 text-sm text-red-600">{error}</p>}
-        {success && <p className="md:col-span-2 text-sm text-green-600">{success}</p>}
-        <div className="md:col-span-2 flex gap-2">
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-60"
-          >
-            {loading ? "Création..." : "Créer mon compte"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/login")}
-            className="rounded border px-4 py-2"
-          >
-            Déjà inscrit ? Connexion
-          </button>
+    <main className="auth-page">
+      <div className="card">
+        <div className="card-header">
+          <p className="card-kicker">BookExchange</p>
+          <h1 className="card-title">Inscription</h1>
+          <p className="card-sub">Créez votre compte et commencez à échanger vos livres.</p>
         </div>
-      </form>
+        <form onSubmit={handleSubmit} className="form-grid">
+          <label className="field">
+            Prénom
+            <input
+              value={form.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              className="input"
+              required
+            />
+          </label>
+          <label className="field">
+            Nom
+            <input
+              value={form.surname}
+              onChange={(e) => handleChange("surname", e.target.value)}
+              className="input"
+              required
+            />
+          </label>
+          <label className="field">
+            Email
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+              className="input"
+              required
+            />
+          </label>
+          <label className="field">
+            Ville
+            <input
+              value={form.villes}
+              onChange={(e) => handleChange("villes", e.target.value)}
+              className="input"
+              required
+            />
+          </label>
+          <label className="field">
+            Âge
+            <input
+              type="number"
+              min={0}
+              value={form.age}
+              onChange={(e) => handleChange("age", e.target.value)}
+              className="input"
+              required
+            />
+          </label>
+          <label className="field" style={{ gridColumn: "1 / -1" }}>
+            Mot de passe
+            <input
+              type="password"
+              value={form.mdp}
+              onChange={(e) => handleChange("mdp", e.target.value)}
+              className="input"
+              required
+            />
+          </label>
+          {error && <p className="text-error" style={{ gridColumn: "1 / -1" }}>{error}</p>}
+          {success && <p className="text-success" style={{ gridColumn: "1 / -1" }}>{success}</p>}
+          <div className="actions" style={{ gridColumn: "1 / -1" }}>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary"
+            >
+              {loading ? "Création..." : "Créer mon compte"}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/login")}
+              className="btn btn-ghost"
+            >
+              Déjà inscrit ? Connexion
+            </button>
+          </div>
+        </form>
+      </div>
     </main>
   );
 }

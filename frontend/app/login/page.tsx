@@ -30,45 +30,49 @@ export default function Login() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
-      <h1 className="mb-6 text-2xl font-semibold">Connexion</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm">
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rounded border px-3 py-2"
-            required
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Mot de passe
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded border px-3 py-2"
-            required
-          />
-        </label>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-60"
-        >
-          {loading ? "Connexion..." : "Se connecter"}
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push("/register")}
-          className="rounded border px-4 py-2"
-        >
-          Pas de compte ? Inscription
-        </button>
-      </form>
+    <main className="auth-page">
+      <div className="card card-narrow">
+        <div className="card-header">
+          <p className="card-kicker">BookExchange</p>
+          <h1 className="card-title">Connexion</h1>
+          <p className="card-sub">Ravis de vous revoir, accédez à votre bibliothèque.</p>
+        </div>
+        <form onSubmit={handleSubmit} className="form-grid" style={{ gap: "16px" }}>
+          <label className="field">
+            Email
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input"
+              required
+            />
+          </label>
+          <label className="field">
+            Mot de passe
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input"
+              required
+            />
+          </label>
+          {error && <p className="text-error" style={{ gridColumn: "1 / -1" }}>{error}</p>}
+          <div className="actions" style={{ gridColumn: "1 / -1" }}>
+            <button type="submit" disabled={loading} className="btn btn-primary">
+              {loading ? "Connexion..." : "Se connecter"}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/register")}
+              className="btn btn-ghost"
+            >
+              Pas de compte ? Inscription
+            </button>
+          </div>
+        </form>
+      </div>
     </main>
   );
 }
