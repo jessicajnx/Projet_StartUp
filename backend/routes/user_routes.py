@@ -35,6 +35,12 @@ def require_admin(current_user: User = Depends(get_current_user)):
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     return current_user
 
+@router.get("/me/livres", response_model=List)
+def get_current_user_livres(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from schemas import Livre as LivreSchema
+    user = db.query(User).filter(User.id == current_user.id).first()
+    return user.livres
+
 @router.get("/", response_model=List[UserSchema])
 def get_all_users(db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     users = db.query(User).all()
