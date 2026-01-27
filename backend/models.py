@@ -24,13 +24,15 @@ class User(Base):
     role = Column("Role", String(20), nullable=False, default="Pauvre")
     villes = Column("Villes", String(100))
     mdp = Column("MDP", String(255), nullable=False)
-    email = Column("Email", String(255), unique=True, nullable=False, index=True)
+    # MySQL index length limit (utf8mb4): keep indexed email below 191 chars
+    email = Column("Email", String(191), unique=True, nullable=False, index=True)
     age = Column("Age", Integer)
     signalement = Column("Signalement", Integer, default=0)
     liste_livres = Column("liste_livres", JSON, nullable=True)
 
     emprunts_emprunter = relationship("Emprunt", foreign_keys="[Emprunt.id_user2]", back_populates="emprunter")
     emprunts_emprunteur = relationship("Emprunt", foreign_keys="[Emprunt.id_user1]", back_populates="emprunteur")
+    personal_books = relationship("BibliothequePersonnelle", back_populates="user", cascade="all, delete-orphan")
 
 
 class Emprunt(Base):
@@ -51,6 +53,24 @@ class BlockedEmail(Base):
     __tablename__ = "BlockedEmail"
 
     id = Column("ID", Integer, primary_key=True, index=True)
-    email = Column("Email", String(255), unique=True, nullable=False, index=True)
+    # MySQL index length limit (utf8mb4): keep indexed email below 191 chars
+    email = Column("Email", String(191), unique=True, nullable=False, index=True)
     reason = Column("Reason", String(255), nullable=True)
     created_at = Column("CreatedAt", DateTime, default=datetime.utcnow, nullable=False)
+
+
+class BibliothequePersonnelle(Base):
+    __tablename__ = "BibliothequePersonnelle"
+
+    id = Column("ID", Integer, primary_key=True, index=True)
+    user_id = Column("UserID", Integer, ForeignKey("User.ID"), nullable=False, index=True)
+    title = Column("Title", String(255), nullable=False)
+    authors = Column("Authors", JSON, nullable=True)
+    cover_url = Column("CoverUrl", String(512), nullable=True)
+    info_link = Column("InfoLink", String(512), nullable=True)
+    description = Column("Description", String(2000), nullable=True)
+    source = Column("Source", String(50), nullable=False, default="google_books")
+    source_id = Column("SourceID", String(255), nullable=True)
+    created_at = Column("CreatedAt", DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User", back_populates="personal_books")
