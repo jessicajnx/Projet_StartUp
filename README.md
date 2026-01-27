@@ -14,17 +14,30 @@ project/
 
 - Python 3.8+
 - Node.js 18+
-- MySQL 8.0+
+- MySQL 8.0+ (ou SQLite pour le développement)
 
 ## Installation Backend
 
-### 1. Créer la base de données MySQL
+### 1. Installer les dépendances
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+### 2. Configurer la base de données
+
+#### Option A: SQLite (Développement - Par défaut)
+
+Pas de configuration requise. La base de données SQLite sera créée automatiquement au démarrage.
+
+#### Option B: MySQL (Production)
+
+Créer la base de données MySQL:
 
 ```sql
 CREATE DATABASE bookexchange;
 ```
-
-### 2. Configurer les variables d'environnement
 
 Créez un fichier `.env` dans le dossier `backend/`:
 
@@ -33,17 +46,10 @@ DATABASE_URL=mysql+pymysql://root:votre_password@localhost/bookexchange
 SECRET_KEY=votre_cle_secrete_super_securisee
 ```
 
-### 3. Installer les dépendances
+### 3. Démarrer le serveur
 
 ```bash
-cd backend
-pip install -r requirements.txt
-```
-
-### 4. Démarrer le serveur
-
-```bash
-uvicorn main:app --reload
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Le backend sera accessible sur http://localhost:8000
@@ -142,7 +148,7 @@ Le frontend sera accessible sur http://localhost:3000
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Frontend
@@ -159,7 +165,7 @@ npm start
 ### Backend
 - FastAPI
 - SQLAlchemy
-- PyMySQL
+- PyMySQL / SQLite
 - JWT Authentication
 - Pydantic
 - Passlib (bcrypt)
