@@ -52,6 +52,9 @@ export default function Header({ hideAuthActions = false }: HeaderProps) {
                 <Link href="/profil" style={styles.link}>
                   Profil
                 </Link>
+                <Link href="/scan-livre" style={styles.link}>
+                  Scanner un livre
+                </Link>
                 <Link href="/bibliotheque-personnelle" style={styles.link}>
                   Ma Bibliothèque
                 </Link>

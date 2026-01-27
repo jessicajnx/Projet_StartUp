@@ -42,14 +42,32 @@ export default function Home() {
             
             <div style={styles.feature}>
               <div style={styles.featureIcon}>2</div>
-              <h3>Ajoutez vos livres</h3>
-              <p>Partagez les livres que vous possédez et que vous souhaitez échanger</p>
+              <h3>Scannez vos livres avec l'IA</h3>
+              <p>Prenez en photo vos livres, notre IA détecte automatiquement les informations</p>
             </div>
             
             <div style={styles.feature}>
               <div style={styles.featureIcon}>3</div>
               <h3>Recherchez et échangez</h3>
               <p>Trouvez des livres près de chez vous et proposez des échanges</p>
+            </div>
+          </div>
+
+          {/* Nouvelle section IA */}
+          <div style={styles.aiSection}>
+            <h2 style={styles.aiTitle}>Nouvelle fonctionnalité IA !</h2>
+            <div style={styles.aiContent}>
+              <div>
+                <h3 style={styles.aiSubtitle}>Scanner vos livres en un clic</h3>
+                <p style={styles.aiText}>
+                  Grâce à l'intelligence artificielle Qwen, ajoutez vos livres à votre bibliothèque 
+                  simplement en prenant une photo de la couverture. Plus besoin de saisir manuellement 
+                  les informations !
+                </p>
+                <Link href="/scan-livre" style={styles.aiButton}>
+                  Essayer maintenant →
+                </Link>
+              </div>
             </div>
           </div>
 

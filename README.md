@@ -117,6 +117,50 @@ Le frontend sera accessible sur http://localhost:3000
 - `GET /emprunts/emprunteur/{user_id}` - Emprunts faits par utilisateur
 - `GET /emprunts/emprunter/{user_id}` - Emprunts reçus par utilisateur
 
+### AI - Scan de Livres (Qwen Vision)
+- `POST /ai/analyze-book` - Analyser une image de livre avec IA
+- `POST /ai/add-detected-book` - Ajouter un livre détecté à la bibliothèque
+
+## Nouvelle Fonctionnalité : Scanner un Livre avec IA
+
+Cette fonctionnalité utilise **Qwen Vision** pour détecter automatiquement les informations d'un livre à partir d'une photo.
+
+### Configuration Qwen
+
+1. Obtenez une clé API sur [Alibaba Cloud DashScope](https://dashscope.aliyun.com/)
+2. Ajoutez votre clé dans le fichier `.env` du backend :
+
+```env
+QWEN_API_KEY=votre_cle_api_qwen
+QWEN_API_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+```
+
+### Utilisation
+
+1. Connectez-vous à votre compte
+2. Cliquez sur "Scanner un livre" dans le menu
+3. Choisissez une photo de la couverture du livre
+4. Cliquez sur "Analyser avec IA"
+5. Vérifiez les informations détectées (titre, auteur, genre)
+6. Cliquez sur "Ajouter à ma bibliothèque"
+
+### Mode Simulation
+
+Si aucune clé API n'est configurée, le système fonctionne en **mode simulation** avec des données d'exemple. Parfait pour tester l'interface sans configuration !
+
+### Installation des dépendances
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+Les nouvelles dépendances incluent :
+- `Pillow` - Traitement d'images
+- `requests` - Appels API
+- `openai` - Client API compatible Qwen
+
+
 ## Schéma de base de données
 
 ### Table User
