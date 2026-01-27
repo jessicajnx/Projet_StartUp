@@ -38,6 +38,10 @@ Créer la base de données MySQL:
 ```sql
 CREATE DATABASE projet_startup;
 ```
+ mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS projet_startup CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+mysql -u root -p projet_startup < projet_startup.sql
+
 
 Créez un fichier `.env` dans le dossier `backend/`:
 
