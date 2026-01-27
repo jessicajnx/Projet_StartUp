@@ -16,6 +16,11 @@ def create_livre(livre: LivreCreate, db: Session = Depends(get_db), current_user
     db.refresh(db_livre)
     return db_livre
 
+@router.get("/count")
+def get_livres_count(db: Session = Depends(get_db)):
+    total = db.query(Livre).count()
+    return {"total": total}
+
 @router.get("/", response_model=List[LivreSchema])
 def get_all_livres(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     livres = db.query(Livre).offset(skip).limit(limit).all()
