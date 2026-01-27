@@ -54,7 +54,7 @@ export default function ProfilPage() {
     }
     
     loadUserData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadUserData = async () => {
     try {
