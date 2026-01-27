@@ -1,8 +1,14 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 export default function Home() {
-  return (
-    <main>
-      <h1>BookExchange</h1>
-      <p>Bienvenue sur la plateforme d'échange de livres</p>
-    </main>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/login");
+  }, [router]);
+
+  return null;
 }
