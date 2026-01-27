@@ -29,7 +29,7 @@ class UserBase(BaseModel):
     surname: str
     email: EmailStr
     villes: str
-    age: conint(ge=16)
+    age: conint(ge=0)
     role: Optional[str] = "Pauvre"
 
 class UserCreate(UserBase):
@@ -65,8 +65,8 @@ class UserUpdate(BaseModel):
 
     @validator("age")
     def validate_age_update(cls, v: Optional[int]) -> Optional[int]:
-        if v is not None and v < 16:
-            raise ValueError("L'âge minimum est 16 ans")
+        if v is not None and v < 12:
+            raise ValueError("L'âge minimum est 12 ans")
         return v
 
 class User(UserBase):

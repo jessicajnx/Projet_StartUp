@@ -52,14 +52,9 @@ export default function Register() {
     setSuccess(null);
     setLoading(true);
     const ageNumber = Number(form.age);
-    if (!Number.isFinite(ageNumber)) {
+    if (!Number.isFinite(ageNumber) || ageNumber < 0) {
       setLoading(false);
       setError("Âge invalide");
-      return;
-    }
-    if (ageNumber < 16) {
-      setLoading(false);
-      setError("Vous devez avoir au moins 16 ans");
       return;
     }
     if (!emailRegex.test(form.email)) {
@@ -139,7 +134,7 @@ export default function Register() {
               Âge
               <input
                 type="number"
-                min={16}
+                min={0}
                 value={form.age}
                 onChange={(e) => handleChange("age", e.target.value)}
                 className="input"
