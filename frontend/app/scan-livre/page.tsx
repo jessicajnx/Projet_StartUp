@@ -22,6 +22,7 @@ export default function ScanLivrePage() {
   const [bookInfo, setBookInfo] = useState<BookInfo | null>(null);
   const [error, setError] = useState<string>('');
   const [adding, setAdding] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -115,6 +116,54 @@ export default function ScanLivrePage() {
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      const file = files[0];
+      
+      if (!file.type.startsWith('image/')) {
+        setError('Veuillez déposer une image');
+        return;
+      }
+
+      // Créer une prévisualisation
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage(reader.result as string);
+        setBookInfo(null);
+        setError('');
+      };
+      reader.readAsDataURL(file);
+
+      // Mettre à jour le input file
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      if (fileInputRef.current) {
+        fileInputRef.current.files = dataTransfer.files;
+      }
+    }
+  };
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div style={styles.container}>
       <Header />
@@ -139,13 +188,22 @@ export default function ScanLivrePage() {
               />
               
               {!selectedImage ? (
-                <label htmlFor="file-input" style={styles.uploadArea}>
-                  <h3>Choisir une photo</h3>
-                  <p>ou glisser-déposer une image</p>
-                  <button type="button" style={styles.selectButton}>
+                <div 
+                  style={isDragging ? {...styles.uploadArea, ...styles.uploadAreaDragging} : styles.uploadArea}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <h3 style={styles.uploadTitle}>Choisir une photo</h3>
+                  <p style={styles.uploadText}>ou glisser-déposer une image</p>
+                  <button 
+                    type="button" 
+                    onClick={handleButtonClick}
+                    style={styles.selectButton}
+                  >
                     Parcourir
                   </button>
-                </label>
+                </div>
               ) : (
                 <div style={styles.previewArea}>
                   <img src={selectedImage} alt="Aperçu" style={styles.previewImage} />
@@ -279,14 +337,32 @@ const styles = {
     borderRadius: '8px',
     padding: '3rem',
     textAlign: 'center' as const,
-    cursor: 'pointer',
-    transition: 'background-color 0.3s',
-    display: 'block',
+    transition: 'all 0.3s ease',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '0.5rem',
     backgroundColor: '#F5E6D3',
+  } as React.CSSProperties,
+  uploadAreaDragging: {
+    borderColor: '#8B7355',
+    backgroundColor: 'rgba(139, 115, 85, 0.15)',
+    transform: 'scale(1.02)',
   } as React.CSSProperties,
   uploadIcon: {
     fontSize: '4rem',
-    marginBottom: '1rem',
+    marginBottom: '0.5rem',
+  } as React.CSSProperties,
+  uploadTitle: {
+    margin: 0,
+    color: '#5D4E37',
+    fontSize: '1.5rem',
+    fontWeight: '600' as const,
+  } as React.CSSProperties,
+  uploadText: {
+    margin: 0,
+    color: '#8B7355',
+    fontSize: '1rem',
   } as React.CSSProperties,
   selectButton: {
     backgroundColor: '#8B7355',
@@ -295,8 +371,10 @@ const styles = {
     padding: '0.75rem 2rem',
     borderRadius: '8px',
     fontSize: '1rem',
+    fontWeight: '600' as const,
     cursor: 'pointer',
-    marginTop: '1rem',
+    marginTop: '0.5rem',
+    transition: 'all 0.3s ease',
   } as React.CSSProperties,
   previewArea: {
     textAlign: 'center' as const,
