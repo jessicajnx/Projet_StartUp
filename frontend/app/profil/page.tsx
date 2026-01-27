@@ -43,6 +43,7 @@ export default function ProfilPage() {
     email: '',
     villes: '',
     age: 0,
+    mdp: '',
   });
 
   useEffect(() => {
@@ -65,6 +66,7 @@ export default function ProfilPage() {
         email: userResponse.data.email,
         villes: userResponse.data.villes,
         age: userResponse.data.age,
+        mdp: '',
       });
 
       const livresResponse = await userAPI.getMeLivres();
@@ -81,8 +83,23 @@ export default function ProfilPage() {
     if (!user) return;
     
     try {
-      await userAPI.update(user.id, formData);
+      const updateData: any = {
+        name: formData.name,
+        surname: formData.surname,
+        email: formData.email,
+        villes: formData.villes,
+        age: formData.age,
+      };
+      
+      // N'envoyer le mot de passe que s'il est renseigné
+      if (formData.mdp && formData.mdp.trim() !== '') {
+        updateData.mdp = formData.mdp;
+      }
+      
+      await userAPI.updateMe(updateData);
       setIsEditing(false);
+      // Réinitialiser le champ mot de passe
+      setFormData({...formData, mdp: ''});
       loadUserData();
       alert('Profil mis à jour avec succès !');
     } catch (error) {
@@ -130,7 +147,7 @@ export default function ProfilPage() {
             {isEditing ? (
               <div style={styles.form}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Nom:</label>
+                  <label style={styles.label}>Prénom:</label>
                   <input
                     type="text"
                     value={formData.name}
@@ -139,7 +156,7 @@ export default function ProfilPage() {
                   />
                 </div>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Prénom:</label>
+                  <label style={styles.label}>Nom:</label>
                   <input
                     type="text"
                     value={formData.surname}
@@ -174,6 +191,16 @@ export default function ProfilPage() {
                     style={styles.input}
                   />
                 </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Nouveau mot de passe (laisser vide pour ne pas modifier):</label>
+                  <input
+                    type="password"
+                    value={formData.mdp}
+                    onChange={(e) => setFormData({...formData, mdp: e.target.value})}
+                    style={styles.input}
+                    placeholder="Nouveau mot de passe"
+                  />
+                </div>
                 <div style={styles.buttonGroup}>
                   <button onClick={handleUpdateProfile} style={styles.saveButton}>
                     Enregistrer
@@ -185,8 +212,8 @@ export default function ProfilPage() {
               </div>
             ) : (
               <div style={styles.infoCard}>
-                <p><strong>Nom:</strong> {user.name}</p>
-                <p><strong>Prénom:</strong> {user.surname}</p>
+                <p><strong>Prénom:</strong> {user.name}</p>
+                <p><strong>Nom:</strong> {user.surname}</p>
                 <p><strong>Email:</strong> {user.email}</p>
                 <p><strong>Ville:</strong> {user.villes}</p>
                 <p><strong>Âge:</strong> {user.age} ans</p>

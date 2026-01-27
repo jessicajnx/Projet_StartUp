@@ -47,7 +47,7 @@ export default function Header({ hideAuthActions = false }: HeaderProps) {
                 <Link href="/messagerie" style={styles.link}>
                   Conversation
                 </Link>
-                <span style={styles.userName}>Bonjour, {userName}</span>
+                <span style={styles.userName}>Bonjour {userName}</span>
                 <button onClick={handleLogout} style={styles.button}>
                   Déconnexion
                 </button>
