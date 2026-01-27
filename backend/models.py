@@ -45,3 +45,12 @@ class Emprunt(Base):
     emprunteur = relationship("User", foreign_keys=[id_user1], back_populates="emprunts_emprunteur")
     emprunter = relationship("User", foreign_keys=[id_user2], back_populates="emprunts_emprunter")
     livre = relationship("Livre", back_populates="emprunts")
+
+
+class BlockedEmail(Base):
+    __tablename__ = "BlockedEmail"
+
+    id = Column("ID", Integer, primary_key=True, index=True)
+    email = Column("Email", String(255), unique=True, nullable=False, index=True)
+    reason = Column("Reason", String(255), nullable=True)
+    created_at = Column("CreatedAt", DateTime, default=datetime.utcnow, nullable=False)

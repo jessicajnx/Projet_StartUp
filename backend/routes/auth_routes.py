@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User
+from models import User, BlockedEmail
 from schemas import UserCreate, User as UserSchema, UserLogin, Token
 from auth import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from datetime import timedelta
@@ -10,6 +10,18 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
 def register(user: UserCreate, db: Session = Depends(get_db)):
+    blocked = db.query(BlockedEmail).filter(BlockedEmail.email == user.email).first()
+    if blocked:
+        raise HTTPException(status_code=403, detail="Adresse email bloquée après une précédente tentative")
+
+    if user.age < 12:
+        existing_block = blocked or db.query(BlockedEmail).filter(BlockedEmail.email == user.email).first()
+        if not existing_block:
+            blocked_email = BlockedEmail(email=user.email, reason="Tentative d'inscription avec moins de 12 ans")
+            db.add(blocked_email)
+            db.commit()
+        raise HTTPException(status_code=400, detail="Compte impossible pour les moins de 12 ans (adresse bloquée)")
+
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email déjà enregistré")
