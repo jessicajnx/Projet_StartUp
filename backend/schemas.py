@@ -47,6 +47,7 @@ class UserUpdate(BaseModel):
 
 class User(UserBase):
     id: int
+    signalement: int = 0
     livres: List[Livre] = []
 
     class Config:
@@ -55,6 +56,7 @@ class User(UserBase):
 class EmpruntBase(BaseModel):
     id_user1: int
     id_user2: int
+    id_livre: int
 
 class EmpruntCreate(EmpruntBase):
     pass

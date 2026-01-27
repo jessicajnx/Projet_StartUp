@@ -4,6 +4,8 @@ from typing import List
 from database import get_db
 from models import Emprunt, User
 from schemas import Emprunt as EmpruntSchema, EmpruntCreate
+from models import Livre
+from datetime import datetime
 from routes.user_routes import get_current_user
 
 router = APIRouter(prefix="/emprunts", tags=["Emprunts"])
@@ -12,14 +14,20 @@ router = APIRouter(prefix="/emprunts", tags=["Emprunts"])
 def create_emprunt(emprunt: EmpruntCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     user1 = db.query(User).filter(User.id == emprunt.id_user1).first()
     user2 = db.query(User).filter(User.id == emprunt.id_user2).first()
-    
+    livre = db.query(Livre).filter(Livre.id == emprunt.id_livre).first()
+
     if not user1 or not user2:
         raise HTTPException(status_code=404, detail="Un des utilisateurs n'existe pas")
-    
+    if not livre:
+        raise HTTPException(status_code=404, detail="Livre non trouvé")
     if emprunt.id_user1 == emprunt.id_user2:
         raise HTTPException(status_code=400, detail="Un utilisateur ne peut pas emprunter à lui-même")
-    
-    db_emprunt = Emprunt(**emprunt.dict())
+
+    payload = emprunt.dict()
+    if not payload.get("datetime"):
+        payload["datetime"] = datetime.utcnow()
+
+    db_emprunt = Emprunt(**payload)
     db.add(db_emprunt)
     db.commit()
     db.refresh(db_emprunt)

@@ -4,6 +4,23 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authAPI } from "@/lib/api";
 
+// Fonction pour décoder un JWT basique
+function decodeToken(token: string) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -20,8 +37,18 @@ export default function Login() {
       const token = res.data?.access_token;
       if (typeof window !== "undefined" && token) {
         localStorage.setItem("token", token);
+        
+        // Décoder le token pour récupérer le rôle
+        const decoded = decodeToken(token);
+        const userRole = decoded?.role;
+        
+        // Rediriger en fonction du rôle
+        if (userRole === "Admin") {
+          router.push("/admin");
+        } else {
+          router.push("/");
+        }
       }
-      router.push("/");
     } catch (err: any) {
       setError(err?.response?.data?.detail || "Connexion impossible");
     } finally {

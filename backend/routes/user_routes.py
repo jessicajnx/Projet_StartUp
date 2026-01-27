@@ -86,3 +86,9 @@ def delete_user(user_id: int, db: Session = Depends(get_db), current_user: User 
 def get_users_by_ville(ville: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     users = db.query(User).filter(User.villes.like(f"%{ville}%")).all()
     return users
+
+@router.get("/admin/users-report", response_model=List[UserSchema])
+def get_users_by_report(db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
+    """Récupère tous les users triés par nombre de signalements (décroissant)"""
+    users = db.query(User).order_by(User.signalement.desc()).all()
+    return users
