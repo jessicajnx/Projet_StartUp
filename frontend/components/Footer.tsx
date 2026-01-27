@@ -38,10 +38,13 @@ export default function Footer() {
 
 const styles = {
   footer: {
-    backgroundColor: '#5D4E37',
-    color: 'white',
+    backgroundColor: 'rgba(255,255,255,0.65)',
+    borderTop: '1px solid #d6c3a5',
+    color: '#2f241d',
     padding: '2rem 1rem 1rem',
     marginTop: 'auto',
+    backdropFilter: 'blur(6px)',
+    boxShadow: '0 -4px 12px rgba(47,36,29,0.06)',
   } as React.CSSProperties,
   container: {
     maxWidth: '1200px',
@@ -62,13 +65,16 @@ const styles = {
     margin: 0,
   } as React.CSSProperties,
   link: {
-    color: '#D4B59E',
+    color: '#8b5e3c',
     textDecoration: 'none',
-    transition: 'color 0.3s',
+    transition: 'color 0.2s',
+    fontWeight: 500,
   } as React.CSSProperties,
   copyright: {
     textAlign: 'center' as const,
-    borderTop: '1px solid #8B7355',
+    borderTop: '1px solid #d6c3a5',
     paddingTop: '1rem',
+    color: '#5c4b3a',
+    fontSize: '0.9rem',
   } as React.CSSProperties,
 };

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import api from "@/lib/api";
 
@@ -153,36 +154,7 @@ export default function AdminPage() {
 
   return (
     <div style={styles.container}>
-      <header style={styles.adminTopbar}>
-        <div style={styles.topbarTitle}>Espace Administrateur</div>
-        <div style={styles.topbarActions}>
-          <button
-            style={styles.topbarButton}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#d9c5ae";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#E8D8C4";
-            }}
-            onClick={() => router.push("/profil")}
-          >
-            Profil
-          </button>
-          <button
-            style={styles.logoutButton}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#a81810";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#b42318";
-            }}
-            onClick={handleLogout}
-          >
-            Déconnexion
-          </button>
-        </div>
-      </header>
-
+      <Header />
       <main style={styles.main}>
         <section style={styles.adminHeader}>
           <h1 style={styles.title}>Gestion Administrateur</h1>
@@ -193,6 +165,30 @@ export default function AdminPage() {
 
         <section style={styles.content}>
           <div style={styles.controls}>
+            <button
+              onClick={() => router.push("/profil")}
+              style={styles.profileButton}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(255,255,255,1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.9)";
+              }}
+            >
+              Profil
+            </button>
+            <button
+              onClick={handleLogout}
+              style={styles.logoutButton}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#a81810";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#b42318";
+              }}
+            >
+              Déconnexion
+            </button>
             <button
               onClick={handleToggleSort}
               style={styles.sortButton}
@@ -454,48 +450,33 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1,
   },
   adminHeader: {
-    backgroundColor: "#5D4E37",
+    backgroundColor: "rgba(139,94,60,0.95)",
     color: "white",
     padding: "2rem",
     textAlign: "center",
+    borderBottom: "1px solid #d6c3a5",
+    boxShadow: "0 4px 12px rgba(47,36,29,0.12)",
   },
-  adminTopbar: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "1rem 2rem",
-    backgroundColor: "#5D4E37",
-    color: "white",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-  },
-  topbarTitle: {
-    fontSize: "1.25rem",
-    fontWeight: 700,
-    margin: 0,
-  },
-  topbarActions: {
-    display: "flex",
-    gap: "0.75rem",
-  },
-  topbarButton: {
-    backgroundColor: "#E8D8C4",
-    color: "#5D4E37",
-    border: "2px solid #D4B59E",
-    padding: "0.6rem 1.1rem",
-    borderRadius: "8px",
+  profileButton: {
+    backgroundColor: "rgba(255,255,255,0.9)",
+    color: "#8b5e3c",
+    border: "1px solid #d6c3a5",
+    padding: "0.75rem 1.5rem",
+    borderRadius: "10px",
     cursor: "pointer",
-    fontSize: "0.95rem",
-    fontWeight: 600,
-    transition: "background-color 0.3s",
+    fontSize: "1rem",
+    fontWeight: "600",
+    transition: "all 120ms ease",
+    boxShadow: "0 4px 12px rgba(47,36,29,0.06)",
   },
   logoutButton: {
     backgroundColor: "#b42318",
     color: "white",
     border: "none",
-    padding: "0.6rem 1.1rem",
-    borderRadius: "8px",
+    padding: "0.75rem 1.5rem",
+    borderRadius: "10px",
     cursor: "pointer",
-    fontSize: "0.95rem",
+    fontSize: "1rem",
     fontWeight: 600,
     transition: "background-color 0.3s",
   },
@@ -522,26 +503,28 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: "wrap",
   },
   sortButton: {
-    backgroundColor: "#8B7355",
+    backgroundColor: "#8b5e3c",
     color: "white",
     border: "none",
     padding: "0.75rem 1.5rem",
-    borderRadius: "8px",
+    borderRadius: "10px",
     cursor: "pointer",
     fontSize: "1rem",
     fontWeight: "600",
-    transition: "background-color 0.3s",
+    transition: "all 120ms ease",
+    boxShadow: "0 10px 18px rgba(139,94,60,0.22)",
   },
   refreshButton: {
-    backgroundColor: "#E8D8C4",
-    color: "#5D4E37",
-    border: "2px solid #D4B59E",
+    backgroundColor: "rgba(255,255,255,0.9)",
+    color: "#8b5e3c",
+    border: "1px solid #d6c3a5",
     padding: "0.75rem 1.5rem",
-    borderRadius: "8px",
+    borderRadius: "10px",
     cursor: "pointer",
     fontSize: "1rem",
     fontWeight: "600",
-    transition: "background-color 0.3s",
+    transition: "all 120ms ease",
+    boxShadow: "0 4px 12px rgba(47,36,29,0.06)",
   },
   error: {
     color: "#b42318",
@@ -553,38 +536,40 @@ const styles: Record<string, React.CSSProperties> = {
   loading: {
     textAlign: "center",
     fontSize: "1.1rem",
-    color: "#5D4E37",
+    color: "#2f241d",
     padding: "2rem",
   },
   noData: {
     textAlign: "center",
     fontSize: "1.1rem",
-    color: "#8B7355",
+    color: "#5c4b3a",
     padding: "2rem",
   },
   tableWrapper: {
     overflowX: "auto",
-    borderRadius: "12px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    borderRadius: "18px",
+    boxShadow: "0 18px 45px rgba(47,36,29,0.12)",
+    border: "1px solid #d6c3a5",
   },
   table: {
     width: "100%",
     borderCollapse: "collapse",
-    backgroundColor: "white",
+    backgroundColor: "rgba(255,255,255,0.78)",
+    backdropFilter: "blur(6px)",
   },
   headerRow: {
-    backgroundColor: "#D4B59E",
-    borderBottom: "3px solid #8B7355",
+    backgroundColor: "rgba(139,94,60,0.15)",
+    borderBottom: "2px solid #d6c3a5",
   },
   headerCell: {
     padding: "1rem",
     textAlign: "left",
     fontWeight: "bold",
-    color: "#5D4E37",
+    color: "#2f241d",
     fontSize: "0.95rem",
   },
   bodyRow: {
-    borderBottom: "1px solid #E8D8C4",
+    borderBottom: "1px solid #d6c3a5",
     transition: "background-color 0.2s",
   },
   cell: {
@@ -595,22 +580,24 @@ const styles: Record<string, React.CSSProperties> = {
   roleBadge: {
     display: "inline-block",
     padding: "0.35rem 0.75rem",
-    borderRadius: "20px",
+    borderRadius: "10px",
     color: "white",
     fontSize: "0.85rem",
     fontWeight: "600",
+    boxShadow: "0 4px 8px rgba(139,94,60,0.18)",
   },
   actionButton: {
-    backgroundColor: "#E8D8C4",
-    color: "#5D4E37",
-    border: "1px solid #D4B59E",
+    backgroundColor: "rgba(255,255,255,0.9)",
+    color: "#8b5e3c",
+    border: "1px solid #d6c3a5",
     padding: "0.5rem 1rem",
-    borderRadius: "6px",
+    borderRadius: "10px",
     cursor: "pointer",
     fontSize: "0.85rem",
     fontWeight: "600",
     marginRight: "0.5rem",
-    transition: "background-color 0.3s",
+    transition: "all 120ms ease",
+    boxShadow: "0 4px 12px rgba(47,36,29,0.06)",
   },
   deleteButton: {
     backgroundColor: "#b42318",
@@ -636,20 +623,23 @@ const styles: Record<string, React.CSSProperties> = {
     zIndex: 1000,
   },
   modalContent: {
-    backgroundColor: "white",
-    borderRadius: "12px",
+    backgroundColor: "rgba(255,255,255,0.98)",
+    border: "1px solid #d6c3a5",
+    borderRadius: "18px",
     padding: "2rem",
     maxWidth: "500px",
     width: "90%",
     maxHeight: "90vh",
     overflowY: "auto",
-    boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+    boxShadow: "0 18px 45px rgba(47,36,29,0.22)",
+    backdropFilter: "blur(6px)",
   },
   modalTitle: {
     fontSize: "1.5rem",
-    color: "#5D4E37",
+    color: "#2f241d",
     marginBottom: "1.5rem",
     margin: 0,
+    fontWeight: 700,
   },
   formGroup: {
     marginBottom: "1rem",
@@ -658,11 +648,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   input: {
     padding: "0.75rem",
-    borderRadius: "6px",
-    border: "2px solid #D4B59E",
+    borderRadius: "10px",
+    border: "1px solid #d6c3a5",
     fontSize: "1rem",
     marginTop: "0.5rem",
-    color: "#5D4E37",
+    color: "#2f241d",
+    backgroundColor: "rgba(255,255,255,0.9)",
+    boxShadow: "0 4px 12px rgba(47,36,29,0.06)",
   },
   modalActions: {
     display: "flex",
@@ -670,27 +662,29 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: "2rem",
   },
   saveButton: {
-    backgroundColor: "#8B7355",
+    backgroundColor: "#8b5e3c",
     color: "white",
     border: "none",
     padding: "0.75rem 1.5rem",
-    borderRadius: "8px",
+    borderRadius: "10px",
     cursor: "pointer",
     fontSize: "1rem",
     fontWeight: "600",
-    transition: "background-color 0.3s",
+    transition: "all 120ms ease",
     flex: 1,
+    boxShadow: "0 10px 18px rgba(139,94,60,0.22)",
   },
   cancelButton: {
-    backgroundColor: "#E8D8C4",
-    color: "#5D4E37",
-    border: "2px solid #D4B59E",
+    backgroundColor: "rgba(255,255,255,0.9)",
+    color: "#8b5e3c",
+    border: "1px solid #d6c3a5",
     padding: "0.75rem 1.5rem",
-    borderRadius: "8px",
+    borderRadius: "10px",
     cursor: "pointer",
     fontSize: "1rem",
     fontWeight: "600",
-    transition: "background-color 0.3s",
+    transition: "all 120ms ease",
     flex: 1,
+    boxShadow: "0 4px 12px rgba(47,36,29,0.06)",
   },
 };

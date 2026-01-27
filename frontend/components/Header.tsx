@@ -2,9 +2,13 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 
-export default function Header() {
+type HeaderProps = {
+  hideAuthActions?: boolean;
+};
+
+export default function Header({ hideAuthActions = false }: HeaderProps) {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState('');
@@ -30,44 +34,48 @@ export default function Header() {
           <h1>Livre2Main</h1>
         </Link>
         
-        <nav style={styles.nav}>
-          {isAuthenticated ? (
-            <>
-              <Link href="/profil" style={styles.link}>
-                Profil
-              </Link>
-              <Link href="/bibliotheque-personnelle" style={styles.link}>
-                Ma Bibliothèque
-              </Link>
-              <Link href="/messagerie" style={styles.link}>
-                Conversation
-              </Link>
-              <span style={styles.userName}>Bonjour, {userName}</span>
-              <button onClick={handleLogout} style={styles.button}>
-                Déconnexion
-              </button>
-            </>
-          ) : (
-            <>
-              <Link href="/login" style={styles.button}>
-                Connexion
-              </Link>
-              <Link href="/register" style={styles.button}>
-                Inscription
-              </Link>
-            </>
-          )}
-        </nav>
+        {!hideAuthActions && (
+          <nav style={styles.nav}>
+            {isAuthenticated ? (
+              <>
+                <Link href="/profil" style={styles.link}>
+                  Profil
+                </Link>
+                <Link href="/bibliotheque-personnelle" style={styles.link}>
+                  Ma Bibliothèque
+                </Link>
+                <Link href="/messagerie" style={styles.link}>
+                  Conversation
+                </Link>
+                <span style={styles.userName}>Bonjour, {userName}</span>
+                <button onClick={handleLogout} style={styles.button}>
+                  Déconnexion
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" style={styles.button}>
+                  Connexion
+                </Link>
+                <Link href="/register" style={styles.button}>
+                  Inscription
+                </Link>
+              </>
+            )}
+          </nav>
+        )}
       </div>
     </header>
   );
 }
 
-const styles = {
+const styles: Record<string, CSSProperties> = {
   header: {
-    backgroundColor: '#D4B59E',
+    backgroundColor: 'rgba(255,255,255,0.78)',
+    borderBottom: '1px solid #d6c3a5',
     padding: '1rem 2rem',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    boxShadow: '0 4px 12px rgba(47,36,29,0.08)',
+    backdropFilter: 'blur(6px)',
   } as React.CSSProperties,
   container: {
     maxWidth: '1200px',
@@ -79,7 +87,8 @@ const styles = {
   } as React.CSSProperties,
   logo: {
     textDecoration: 'none',
-    color: '#5D4E37',
+    color: '#2f241d',
+    fontWeight: 700,
   } as React.CSSProperties,
   nav: {
     display: 'flex',
@@ -89,23 +98,27 @@ const styles = {
   } as React.CSSProperties,
   link: {
     textDecoration: 'none',
-    color: '#5D4E37',
+    color: '#5c4b3a',
     padding: '0.5rem 1rem',
-    borderRadius: '4px',
-    transition: 'background-color 0.3s',
+    borderRadius: '10px',
+    transition: 'all 120ms ease',
+    fontWeight: 500,
   } as React.CSSProperties,
   button: {
-    backgroundColor: '#8B7355',
+    backgroundColor: '#8b5e3c',
     color: 'white',
     border: 'none',
-    padding: '0.5rem 1rem',
-    borderRadius: '4px',
+    padding: '0.6rem 1.2rem',
+    borderRadius: '10px',
     cursor: 'pointer',
     textDecoration: 'none',
     display: 'inline-block',
+    fontWeight: 600,
+    transition: 'all 120ms ease',
+    boxShadow: '0 4px 12px rgba(139,94,60,0.18)',
   } as React.CSSProperties,
   userName: {
-    color: '#5D4E37',
-    fontWeight: 'bold',
+    color: '#2f241d',
+    fontWeight: 600,
   } as React.CSSProperties,
 };

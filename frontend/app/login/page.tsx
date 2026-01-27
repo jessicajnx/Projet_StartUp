@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authAPI } from "@/lib/api";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 // Fonction pour décoder un JWT basique
 function decodeToken(token: string) {
@@ -57,49 +59,53 @@ export default function Login() {
   };
 
   return (
-    <main className="auth-page">
-      <div className="card card-narrow">
-        <div className="card-header">
-          <p className="card-kicker">Livre2main</p>
-          <h1 className="card-title">Connexion</h1>
-          <p className="card-sub">Ravis de vous revoir, accédez à votre bibliothèque.</p>
-        </div>
-        <form onSubmit={handleSubmit} className="form-grid" style={{ gap: "16px" }}>
-          <label className="field">
-            Email
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input"
-              required
-            />
-          </label>
-          <label className="field">
-            Mot de passe
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input"
-              required
-            />
-          </label>
-          {error && <p className="text-error" style={{ gridColumn: "1 / -1" }}>{error}</p>}
-          <div className="actions" style={{ gridColumn: "1 / -1" }}>
-            <button type="submit" disabled={loading} className="btn btn-primary">
-              {loading ? "Connexion..." : "Se connecter"}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/register")}
-              className="btn btn-ghost"
-            >
-              Pas de compte ? Inscription
-            </button>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <Header hideAuthActions />
+      <main className="auth-page" style={{ flex: 1 }}>
+        <div className="card card-narrow">
+          <div className="card-header">
+            <p className="card-kicker">Livre2main</p>
+            <h1 className="card-title">Connexion</h1>
+            <p className="card-sub">Ravis de vous revoir, accédez à votre bibliothèque.</p>
           </div>
-        </form>
-      </div>
-    </main>
+          <form onSubmit={handleSubmit} className="form-grid" style={{ gap: "16px" }}>
+            <label className="field">
+              Email
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input"
+                required
+              />
+            </label>
+            <label className="field">
+              Mot de passe
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input"
+                required
+              />
+            </label>
+            {error && <p className="text-error" style={{ gridColumn: "1 / -1" }}>{error}</p>}
+            <div className="actions" style={{ gridColumn: "1 / -1" }}>
+              <button type="submit" disabled={loading} className="btn btn-primary">
+                {loading ? "Connexion..." : "Se connecter"}
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/register")}
+                className="btn btn-ghost"
+              >
+                Pas de compte ? Inscription
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+      <Footer />
+    </div>
   );
 }
