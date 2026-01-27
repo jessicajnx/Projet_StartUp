@@ -21,6 +21,7 @@ export const authAPI = {
 
 export const userAPI = {
   getMe: () => api.get('/users/me'),
+  getMeLivres: () => api.get('/users/me/livres'),
   getAll: () => api.get('/users/'),
   getById: (id: number) => api.get(`/users/${id}`),
   update: (id: number, data: any) => api.put(`/users/${id}`, data),

@@ -36,14 +36,13 @@ Pas de configuration requise. La base de données SQLite sera créée automatiqu
 Créer la base de données MySQL:
 
 ```sql
-CREATE DATABASE bookexchange;
+CREATE DATABASE projet_startup;
 ```
 
 Créez un fichier `.env` dans le dossier `backend/`:
 
 ```
-DATABASE_URL=mysql+pymysql://root:votre_password@localhost/bookexchange
-SECRET_KEY=votre_cle_secrete_super_securisee
+DATABASE_URL=mysql+pymysql://root:votre_password@localhost/projet_startups
 ```
 
 ### 3. Démarrer le serveur
