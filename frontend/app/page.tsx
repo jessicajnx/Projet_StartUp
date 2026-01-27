@@ -1,8 +1,28 @@
+'use client';
+
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useEffect, useState, type CSSProperties } from 'react';
 
 export default function Home() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsAuthenticated(!!token);
+  }, []);
+
+  const handleCtaClick = () => {
+    if (isAuthenticated) {
+      router.push('/recherche');
+    } else {
+      router.push('/register');
+    }
+  };
+
   return (
     <div style={styles.container}>
       <Header />
@@ -17,9 +37,9 @@ export default function Home() {
           <p style={styles.heroDescription}>
             L'accès à la culture pour tous, même avec un petit budget
           </p>
-          <Link href="/register" style={styles.ctaButton}>
+          <button type="button" onClick={handleCtaClick} style={styles.ctaButton}>
             Commencer l'échange
-          </Link>
+          </button>
         </section>
 
         {/* Section Photo */}
@@ -96,32 +116,32 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     minHeight: '100vh',
-  } as React.CSSProperties,
+  } as CSSProperties,
   main: {
     flex: 1,
-  } as React.CSSProperties,
+  } as CSSProperties,
   hero: {
     backgroundColor: 'transparent',
     padding: '4rem 2rem',
     textAlign: 'center' as const,
-  } as React.CSSProperties,
+  } as CSSProperties,
   heroTitle: {
     fontSize: '3rem',
     color: '#2f241d',
     marginBottom: '1rem',
     fontWeight: 700,
-  } as React.CSSProperties,
+  } as CSSProperties,
   heroSubtitle: {
     fontSize: '1.5rem',
     color: '#5c4b3a',
     marginBottom: '1rem',
     fontWeight: 500,
-  } as React.CSSProperties,
+  } as CSSProperties,
   heroDescription: {
     fontSize: '1.2rem',
     color: '#5c4b3a',
     marginBottom: '2rem',
-  } as React.CSSProperties,
+  } as CSSProperties,
   ctaButton: {
     display: 'inline-block',
     backgroundColor: '#8b5e3c',
@@ -133,11 +153,13 @@ const styles = {
     transition: 'all 120ms ease',
     fontWeight: 600,
     boxShadow: '0 10px 18px rgba(139,94,60,0.22)',
-  } as React.CSSProperties,
+    border: 'none',
+    cursor: 'pointer',
+  } as CSSProperties,
   imageSection: {
     padding: '3rem 2rem',
     backgroundColor: 'transparent',
-  } as React.CSSProperties,
+  } as CSSProperties,
   imagePlaceholder: {
     maxWidth: '800px',
     margin: '0 auto',
@@ -150,23 +172,23 @@ const styles = {
     borderRadius: '18px',
     boxShadow: '0 18px 45px rgba(47,36,29,0.12)',
     backdropFilter: 'blur(6px)',
-  } as React.CSSProperties,
+  } as CSSProperties,
   imageText: {
     fontSize: '2rem',
     color: '#8b5e3c',
     fontWeight: 600,
-  } as React.CSSProperties,
+  } as CSSProperties,
   description: {
     padding: '3rem 2rem',
     backgroundColor: 'transparent',
-  } as React.CSSProperties,
+  } as CSSProperties,
   sectionTitle: {
     textAlign: 'center' as const,
     color: '#2f241d',
     fontSize: '2rem',
     marginBottom: '2rem',
     fontWeight: 700,
-  } as React.CSSProperties,
+  } as CSSProperties,
   features: {
     maxWidth: '1200px',
     margin: '0 auto',
@@ -174,7 +196,7 @@ const styles = {
     gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
     gap: '2rem',
     marginBottom: '3rem',
-  } as React.CSSProperties,
+  } as CSSProperties,
   feature: {
     backgroundColor: 'rgba(255,255,255,0.78)',
     border: '1px solid #d6c3a5',
@@ -184,7 +206,7 @@ const styles = {
     boxShadow: '0 18px 45px rgba(47,36,29,0.12)',
     backdropFilter: 'blur(6px)',
     color: '#2f241d',
-  } as React.CSSProperties,
+  } as CSSProperties,
   featureIcon: {
     width: '60px',
     height: '60px',
@@ -198,7 +220,7 @@ const styles = {
     fontWeight: 'bold',
     margin: '0 auto 1rem',
     boxShadow: '0 8px 16px rgba(139,94,60,0.22)',
-  } as React.CSSProperties,
+  } as CSSProperties,
   aboutSection: {
     maxWidth: '800px',
     margin: '0 auto',
@@ -208,11 +230,11 @@ const styles = {
     borderRadius: '18px',
     boxShadow: '0 18px 45px rgba(47,36,29,0.12)',
     backdropFilter: 'blur(6px)',
-  } as React.CSSProperties,
+  } as CSSProperties,
   aboutText: {
     fontSize: '1.1rem',
     lineHeight: '1.6',
     color: '#2f241d',
     marginBottom: '1rem',
-  } as React.CSSProperties,
+  } as CSSProperties,
 };

@@ -4,18 +4,21 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { userAPI, livreAPI } from '@/lib/api';
+import { biblioAPI } from '@/lib/api';
 
-interface Livre {
+interface PersonalBook {
   id: number;
-  nom: string;
-  auteur: string;
-  genre?: string;
+  user_id: number;
+  title: string;
+  authors?: string[];
+  cover_url?: string;
+  info_link?: string;
+  description?: string;
 }
 
 export default function BibliothequePersonnellePage() {
   const router = useRouter();
-  const [livres, setLivres] = useState<Livre[]>([]);
+  const [books, setBooks] = useState<PersonalBook[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -32,8 +35,8 @@ export default function BibliothequePersonnellePage() {
   const loadLivres = async () => {
     try {
       setIsLoading(true);
-      const response = await userAPI.getMeLivres();
-      setLivres(response.data);
+      const response = await biblioAPI.listMe();
+      setBooks(response.data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des livres', error);
     } finally {
@@ -41,14 +44,13 @@ export default function BibliothequePersonnellePage() {
     }
   };
 
-  const handleDeleteLivre = async (livreId: number) => {
+  const handleDeleteLivre = async (bookId: number) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce livre de votre bibliothèque ?')) {
       return;
     }
 
     try {
-      const userResponse = await userAPI.getMe();
-      await livreAPI.unassignFromUser(livreId, userResponse.data.id);
+      await biblioAPI.delete(bookId);
       loadLivres();
       alert('Livre retiré de votre bibliothèque !');
     } catch (error) {
@@ -57,19 +59,10 @@ export default function BibliothequePersonnellePage() {
     }
   };
 
-  const filteredLivres = livres.filter(livre =>
-    livre.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    livre.auteur.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (livre.genre && livre.genre.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  const livresParGenre: { [key: string]: Livre[] } = {};
-  filteredLivres.forEach(livre => {
-    const genre = livre.genre || 'Non classifié';
-    if (!livresParGenre[genre]) {
-      livresParGenre[genre] = [];
-    }
-    livresParGenre[genre].push(livre);
+  const filteredBooks = books.filter(book => {
+    const inTitle = book.title?.toLowerCase().includes(searchQuery.toLowerCase());
+    const inAuthors = (book.authors || []).join(' ').toLowerCase().includes(searchQuery.toLowerCase());
+    return inTitle || inAuthors;
   });
 
   return (
@@ -82,12 +75,8 @@ export default function BibliothequePersonnellePage() {
 
           <section style={styles.statsSection}>
             <div style={styles.statCard}>
-              <div style={styles.statNumber}>{livres.length}</div>
-              <div style={styles.statLabel}>Livres possédés</div>
-            </div>
-            <div style={styles.statCard}>
-              <div style={styles.statNumber}>{Object.keys(livresParGenre).length}</div>
-              <div style={styles.statLabel}>Genres différents</div>
+              <div style={styles.statNumber}>{books.length}</div>
+              <div style={styles.statLabel}>Livres enregistrés</div>
             </div>
           </section>
 
@@ -103,44 +92,56 @@ export default function BibliothequePersonnellePage() {
 
           {isLoading ? (
             <div style={styles.loading}>Chargement de votre bibliothèque...</div>
-          ) : livres.length === 0 ? (
+          ) : books.length === 0 ? (
             <div style={styles.emptyState}>
               <h2 style={styles.emptyTitle}>Votre bibliothèque est vide</h2>
               <p style={styles.emptyText}>
                 Ajoutez vos premiers livres depuis la page Bibliothèque
               </p>
             </div>
-          ) : filteredLivres.length === 0 ? (
+          ) : filteredBooks.length === 0 ? (
             <div style={styles.emptyState}>
               <p>Aucun livre ne correspond à votre recherche</p>
             </div>
           ) : (
             <>
-              {Object.entries(livresParGenre).map(([genre, livresDuGenre]) => (
-                <section key={genre} style={styles.genreSection}>
-                  <h2 style={styles.genreTitle}>
-                    {genre} ({livresDuGenre.length})
-                  </h2>
-                  <div style={styles.livreGrid}>
-                    {livresDuGenre.map(livre => (
-                      <div key={livre.id} style={styles.livreCard}>
-                        <div style={styles.livreIcon}>📖</div>
-                        <h3 style={styles.livreTitle}>{livre.nom}</h3>
-                        <p style={styles.livreAuthor}>par {livre.auteur}</p>
-                        {livre.genre && (
-                          <span style={styles.genreBadge}>{livre.genre}</span>
-                        )}
-                        <button 
-                          onClick={() => handleDeleteLivre(livre.id)}
-                          style={styles.deleteButton}
-                        >
-                          Retirer
-                        </button>
+              <section style={styles.genreSection}>
+                <div style={styles.livreGrid}>
+                  {filteredBooks.map(book => {
+                    const cover = book.cover_url || 'https://via.placeholder.com/300x450?text=Livre';
+                    const truncatedDescription = book.description
+                      ? (book.description.length > 220
+                        ? `${book.description.slice(0, 217)}...`
+                        : book.description)
+                      : '';
+
+                    return (
+                      <div key={book.id} style={styles.livreCard}>
+                        <div style={styles.coverWrapper}>
+                          <img src={cover} alt={book.title} style={styles.coverImage} />
+                        </div>
+                        <div style={styles.meta}>
+                          <h3 style={styles.livreTitle}>{book.title}</h3>
+                          {book.authors && book.authors.length > 0 && (
+                            <p style={styles.livreAuthor}>par {book.authors.join(', ')}</p>
+                          )}
+                          {truncatedDescription && (
+                            <p style={styles.description}>{truncatedDescription}</p>
+                          )}
+                        </div>
+                        <div style={styles.actionsRow}>
+                          <button 
+                            onClick={() => handleDeleteLivre(book.id)}
+                            style={styles.deleteButton}
+                          >
+                            Retirer
+                          </button>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </section>
-              ))}
+                    );
+                  })}
+                </div>
+              </section>
             </>
           )}
         </div>
@@ -241,19 +242,37 @@ const styles = {
   } as React.CSSProperties,
   livreGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
     gap: '1.5rem',
   } as React.CSSProperties,
   livreCard: {
     backgroundColor: 'white',
     padding: '1.5rem',
-    borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-    textAlign: 'center' as const,
+    borderRadius: '12px',
+    boxShadow: '0 6px 14px rgba(0,0,0,0.08)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.75rem',
   } as React.CSSProperties,
-  livreIcon: {
-    fontSize: '3rem',
-    marginBottom: '1rem',
+  coverWrapper: {
+    width: '100%',
+    maxWidth: '180px',
+    height: '240px',
+    margin: '0 auto',
+    borderRadius: '10px',
+    overflow: 'hidden',
+    backgroundColor: '#F0E8DD',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as React.CSSProperties,
+  coverImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover' as const,
+  } as React.CSSProperties,
+  meta: {
+    textAlign: 'center' as const,
   } as React.CSSProperties,
   livreTitle: {
     color: '#5D4E37',
@@ -263,27 +282,27 @@ const styles = {
   } as React.CSSProperties,
   livreAuthor: {
     color: '#8B7355',
-    marginBottom: '1rem',
+    marginBottom: '0.5rem',
     fontSize: '1rem',
   } as React.CSSProperties,
-  genreBadge: {
-    display: 'inline-block',
-    backgroundColor: '#D4B59E',
-    color: '#5D4E37',
-    padding: '0.25rem 0.75rem',
-    borderRadius: '12px',
-    fontSize: '0.85rem',
-    marginBottom: '1rem',
+  description: {
+    color: '#6F5A40',
+    fontSize: '0.95rem',
+    lineHeight: 1.5,
+  } as React.CSSProperties,
+  actionsRow: {
+    display: 'flex',
+    marginTop: '0.5rem',
+    justifyContent: 'center',
   } as React.CSSProperties,
   deleteButton: {
-    width: '100%',
     backgroundColor: '#d9534f',
     color: 'white',
     border: 'none',
-    padding: '0.75rem',
-    borderRadius: '4px',
+    padding: '0.75rem 1rem',
+    borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '0.9rem',
-    marginTop: '1rem',
+    minWidth: '110px',
   } as React.CSSProperties,
 };

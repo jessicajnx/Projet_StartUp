@@ -51,4 +51,10 @@ export const empruntAPI = {
   getByEmprunter: (userId: number) => api.get(`/emprunts/emprunter/${userId}`),
 };
 
+export const biblioAPI = {
+  add: (data: any) => api.post('/bibliotheque-personnelle/', data),
+  listMe: () => api.get('/bibliotheque-personnelle/me'),
+  delete: (id: number) => api.delete(`/bibliotheque-personnelle/${id}`),
+};
+
 export default api;
