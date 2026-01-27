@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from typing import Optional, List, Any
 from datetime import datetime
 
 class LivreBase(BaseModel):
@@ -44,10 +44,12 @@ class UserUpdate(BaseModel):
     age: Optional[int] = None
     role: Optional[str] = None
     mdp: Optional[str] = None
+    liste_livres: Optional[List[Any]] = None
 
 class User(UserBase):
     id: int
     signalement: int = 0
+    liste_livres: Optional[List[Any]] = None
     livres: List[Livre] = []
 
     class Config:

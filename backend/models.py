@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
@@ -27,6 +27,7 @@ class User(Base):
     email = Column("Email", String(255), unique=True, nullable=False, index=True)
     age = Column("Age", Integer)
     signalement = Column("Signalement", Integer, default=0)
+    liste_livres = Column("liste_livres", JSON, nullable=True)
 
     emprunts_emprunter = relationship("Emprunt", foreign_keys="[Emprunt.id_user2]", back_populates="emprunter")
     emprunts_emprunteur = relationship("Emprunt", foreign_keys="[Emprunt.id_user1]", back_populates="emprunteur")

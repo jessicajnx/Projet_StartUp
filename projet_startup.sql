@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3306
--- Généré le : mar. 27 jan. 2026 à 13:39
+-- Généré le : mar. 27 jan. 2026 à 14:06
 -- Version du serveur : 8.4.7
 -- Version de PHP : 8.3.28
 
@@ -72,9 +72,18 @@ CREATE TABLE IF NOT EXISTS `user` (
   `Email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `Age` int DEFAULT NULL,
   `Signalement` int DEFAULT '0',
+  `liste_livres` json DEFAULT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `Email` (`Email`)
 ) ;
+
+--
+-- Déchargement des données de la table `user`
+--
+
+INSERT INTO `user` (`ID`, `Name`, `Surname`, `Role`, `Villes`, `MDP`, `Email`, `Age`, `Signalement`, `liste_livres`) VALUES
+(1, 'jessica', 'jaunaux', 'Pauvre', 'Paris', '$2b$12$lzNPSKOTFgxFntpeVjPer.kFtIYmxDLW0CL2retIilUHutEv5i35K', 'jjaunaux@gmail.com', 22, 0, NULL),
+(3, 'Admin', 'User', 'Admin', 'Paris', '$2b$12$fC7MERadu4Lsgx8rNa9VpOHH33vkPv7bnIlAajMOt4.M8wlzZyZkW', 'admin@livre2main.fr', 30, 0, NULL);
 
 --
 -- Contraintes pour les tables déchargées
