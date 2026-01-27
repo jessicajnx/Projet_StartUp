@@ -99,3 +99,26 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
+
+
+class PersonalBookBase(BaseModel):
+    title: str
+    authors: Optional[List[str]] = None
+    cover_url: Optional[str] = None
+    info_link: Optional[str] = None
+    description: Optional[str] = None
+    source: Optional[str] = "google_books"
+    source_id: Optional[str] = None
+
+
+class PersonalBookCreate(PersonalBookBase):
+    user_id: int
+
+
+class PersonalBook(PersonalBookBase):
+    id: int
+    user_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
