@@ -13,9 +13,9 @@ from routes.user_routes import get_current_user
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
-# Configuration pour Qwen (via API compatible OpenAI)
-#QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")
-QWEN_API_KEY="k_343895f567de.cMJvja0uijI9y3SN5GnnOz4XSDobjfXlF-d-JL7Ugue5ahnRD3neEw"
+
+# Configuration pour Qwen (Alibaba Cloud DashScope)
+QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")
 QWEN_API_URL = os.getenv("QWEN_API_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
 
 def analyze_book_image(image_data: bytes) -> dict:
@@ -110,7 +110,6 @@ Si tu ne peux pas identifier certaines informations, utilise null. Réponds UNIQ
                 # Erreur réseau ou autre - fallback au mode simulation
                 print(f"Erreur connexion API: {api_error} - Passage en mode simulation")
         
-        # Mode simulation GRATUIT - fonctionne toujours !
         import random
         livres_simulation = [
             {"nom": "Le Petit Prince", "auteur": "Antoine de Saint-Exupéry", "genre": "Conte philosophique"},
@@ -124,7 +123,8 @@ Si tu ne peux pas identifier certaines informations, utilise null. Réponds UNIQ
             "nom": livre["nom"],
             "auteur": livre["auteur"],
             "genre": livre["genre"],
-            "note": "Mode simulation GRATUIT - Modifiez les infos si nécessaire avant d'ajouter"
+            "note":  'Mode simulation'
+
         }
         
     except Exception as e:
@@ -153,7 +153,7 @@ async def analyze_book(
     # Lire l'image
     image_data = await file.read()
     
-    # Analyser avec Qwen
+    # Analyser avec l'IA Vision
     book_info = analyze_book_image(image_data)
     
     return {
