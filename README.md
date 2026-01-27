@@ -1,4 +1,4 @@
-# BookExchange
+# Livre2main
 
 Plateforme d'échange de livres entre utilisateurs proches géographiquement.
 

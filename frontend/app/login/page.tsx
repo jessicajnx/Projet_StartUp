@@ -33,7 +33,7 @@ export default function Login() {
     <main className="auth-page">
       <div className="card card-narrow">
         <div className="card-header">
-          <p className="card-kicker">BookExchange</p>
+          <p className="card-kicker">Livre2main</p>
           <h1 className="card-title">Connexion</h1>
           <p className="card-sub">Ravis de vous revoir, accédez à votre bibliothèque.</p>
         </div>

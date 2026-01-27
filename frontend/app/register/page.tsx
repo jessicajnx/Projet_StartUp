@@ -71,7 +71,7 @@ export default function Register() {
     <main className="auth-page">
       <div className="card">
         <div className="card-header">
-          <p className="card-kicker">BookExchange</p>
+          <p className="card-kicker">Livre2main</p>
           <h1 className="card-title">Inscription</h1>
           <p className="card-sub">Créez votre compte et commencez à échanger vos livres.</p>
         </div>

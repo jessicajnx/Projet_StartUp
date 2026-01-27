@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import init_db
 from routes import auth_routes, user_routes, livre_routes, emprunt_routes
 
-app = FastAPI(title="BookExchange API", version="1.0.0")
+app = FastAPI(title="Livre2main API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,7 +24,7 @@ def on_startup():
 
 @app.get("/")
 def root():
-    return {"message": "BookExchange API"}
+    return {"message": "Livre2main API"}
 
 @app.get("/health")
 def health_check():
