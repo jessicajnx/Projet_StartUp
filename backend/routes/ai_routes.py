@@ -124,11 +124,11 @@ Si tu ne peux pas identifier certaines informations, utilise null. Réponds UNIQ
             "nom": livre["nom"],
             "auteur": livre["auteur"],
             "genre": livre["genre"],
+<<<<<<< HEAD
             "note": "Mode simulation GRATUIT - Modifiez les infos si nécessaire avant d'ajouter"
-        }
-        
-    except Exception as e:
-        print(f"Erreur lors de l'analyse: {e}")
+=======
+            "note":  'Mode simulation'
+            "note": "Mode simulation GRATUIT - Modifiez les infos si nécessaire avant d'ajouter"e: {e}")
         return {
             "nom": "Erreur détection",
             "auteur": "Erreur détection",
@@ -153,7 +153,7 @@ async def analyze_book(
     # Lire l'image
     image_data = await file.read()
     
-    # Analyser avec Qwen
+    # Analyser avec l'IA Vision
     book_info = analyze_book_image(image_data)
     
     return {
