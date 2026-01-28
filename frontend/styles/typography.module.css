@@ -23,7 +23,7 @@
 }
 
 .bookTitle {
-  font-size: 1rem;
+  font-size: 1.2rem;
   color: var(--color-text);
   margin: 0;
   font-weight: 700;
@@ -32,11 +32,11 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 2.2rem;
+  min-height: 2.6rem;
 }
 
 .bookAuthor {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--color-primary-light);
   margin: 0;
   font-weight: 500;
@@ -44,9 +44,9 @@
 }
 
 .description {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--color-text-light);
-  line-height: 1.4;
+  line-height: 1.5;
   margin: 0;
   flex: 1;
 }

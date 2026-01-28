@@ -9,9 +9,15 @@ import api from '@/lib/api';
 interface BookInfo {
   nom: string;
   auteur: string;
-  genre: string;
-  note?: string;
   error?: string;
+}
+
+interface AnalyzeResponse {
+  success: boolean;
+  book_info: {
+    livres: BookInfo[];
+    error?: string;
+  };
 }
 
 export default function ScanLivrePage() {
@@ -19,7 +25,10 @@ export default function ScanLivrePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [bookInfo, setBookInfo] = useState<BookInfo | null>(null);
+  const [detectedBooks, setDetectedBooks] = useState<BookInfo[]>([]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editedTitle, setEditedTitle] = useState<string>('');
+  const [editedAuthor, setEditedAuthor] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [adding, setAdding] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -44,7 +53,7 @@ export default function ScanLivrePage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelectedImage(reader.result as string);
-        setBookInfo(null);
+        setDetectedBooks([]);
         setError('');
       };
       reader.readAsDataURL(file);
@@ -59,7 +68,7 @@ export default function ScanLivrePage() {
 
     setAnalyzing(true);
     setError('');
-    setBookInfo(null);
+    setDetectedBooks([]);
 
     try {
       const formData = new FormData();
@@ -71,8 +80,13 @@ export default function ScanLivrePage() {
         },
       });
 
-      if (response.data.success) {
-        setBookInfo(response.data.book_info);
+      if (response.data.success && response.data.book_info) {
+        const livres = response.data.book_info.livres || [];
+        if (livres.length === 0) {
+          setError('Aucun livre détecté dans l\'image');
+        } else {
+          setDetectedBooks(livres);
+        }
       } else {
         setError('Impossible d\'analyser l\'image');
       }
@@ -83,22 +97,24 @@ export default function ScanLivrePage() {
     }
   };
 
-  const handleAddToLibrary = async () => {
-    if (!bookInfo) return;
-
+  const handleAddToLibrary = async (book: BookInfo, index: number) => {
     setAdding(true);
     setError('');
 
     try {
       await api.post('/ai/add-detected-book', null, {
         params: {
-          nom: bookInfo.nom,
-          auteur: bookInfo.auteur,
-          genre: bookInfo.genre,
+          nom: book.nom,
+          auteur: book.auteur,
         },
       });
 
-      router.push('/bibliotheque-personnelle');
+      alert('Livre ajouté à votre bibliothèque !');
+      // Retirer le livre de la liste après ajout
+      setDetectedBooks(detectedBooks.filter((_, i) => i !== index));
+      if (editingIndex === index) {
+        setEditingIndex(null);
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erreur lors de l\'ajout');
     } finally {
@@ -106,9 +122,30 @@ export default function ScanLivrePage() {
     }
   };
 
+  const handleEdit = (index: number) => {
+    setEditingIndex(index);
+    setEditedTitle(detectedBooks[index].nom);
+    setEditedAuthor(detectedBooks[index].auteur);
+  };
+
+  const handleSaveEdit = (index: number) => {
+    const updatedBooks = [...detectedBooks];
+    updatedBooks[index] = {
+      ...updatedBooks[index],
+      nom: editedTitle,
+      auteur: editedAuthor,
+    };
+    setDetectedBooks(updatedBooks);
+    setEditingIndex(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+  };
+
   const handleReset = () => {
     setSelectedImage(null);
-    setBookInfo(null);
+    setDetectedBooks([]);
     setError('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -145,7 +182,7 @@ export default function ScanLivrePage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelectedImage(reader.result as string);
-        setBookInfo(null);
+        setDetectedBooks([]);
         setError('');
       };
       reader.readAsDataURL(file);
@@ -223,42 +260,88 @@ export default function ScanLivrePage() {
             </div>
 
             {/* Résultats */}
-            {bookInfo && (
+            {detectedBooks.length > 0 && (
               <div style={styles.resultsSection}>
-                <h2 style={styles.resultsTitle}>Informations détectées</h2>
+                <h2 style={styles.resultsTitle}>
+                  {detectedBooks.length === 1 ? 'Livre détecté' : `${detectedBooks.length} livres détectés`}
+                </h2>
                 
-                {bookInfo.note && (
-                  <div style={styles.infoNote}>
-                    {bookInfo.note}
+                {detectedBooks.map((book, index) => (
+                  <div key={index} style={styles.bookCard}>
+                    <div style={styles.bookIcon}>📚</div>
+                    <div style={styles.bookDetails}>
+                      {editingIndex === index ? (
+                        <>
+                          <div style={styles.bookField}>
+                            <label>Titre :</label>
+                            <input
+                              type="text"
+                              value={editedTitle}
+                              onChange={(e) => setEditedTitle(e.target.value)}
+                              style={styles.editInput}
+                            />
+                          </div>
+                          <div style={styles.bookField}>
+                            <label>Auteur :</label>
+                            <input
+                              type="text"
+                              value={editedAuthor}
+                              onChange={(e) => setEditedAuthor(e.target.value)}
+                              style={styles.editInput}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div style={styles.bookField}>
+                            <label>Titre :</label>
+                            <div style={styles.bookValue}>{book.nom}</div>
+                          </div>
+                          <div style={styles.bookField}>
+                            <label>Auteur :</label>
+                            <div style={styles.bookValue}>{book.auteur}</div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div style={styles.bookActions}>
+                      {editingIndex === index ? (
+                        <>
+                          <button 
+                            onClick={() => handleSaveEdit(index)}
+                            style={styles.saveButton}
+                          >
+                            ✓ Sauvegarder
+                          </button>
+                          <button 
+                            onClick={handleCancelEdit}
+                            style={styles.cancelButton}
+                          >
+                            ✕ Annuler
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button 
+                            onClick={() => handleEdit(index)}
+                            style={styles.editButton}
+                          >
+                            ✎ Modifier
+                          </button>
+                          <button 
+                            onClick={() => handleAddToLibrary(book, index)}
+                            disabled={adding}
+                            style={adding ? {...styles.addButton, ...styles.buttonDisabled} : styles.addButton}
+                          >
+                            {adding ? 'Ajout...' : '+ Ajouter'}
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                )}
-                
-                <div style={styles.bookCard}>
-                  <div style={styles.bookIcon}></div>
-                  <div style={styles.bookDetails}>
-                    <div style={styles.bookField}>
-                      <label>Titre :</label>
-                      <div style={styles.bookValue}>{bookInfo.nom}</div>
-                    </div>
-                    <div style={styles.bookField}>
-                      <label>Auteur :</label>
-                      <div style={styles.bookValue}>{bookInfo.auteur}</div>
-                    </div>
-                    <div style={styles.bookField}>
-                      <label>Genre :</label>
-                      <div style={styles.bookValue}>{bookInfo.genre}</div>
-                    </div>
-                  </div>
-                </div>
+                ))}
 
                 <div style={styles.actionsSection}>
-                  <button 
-                    onClick={handleAddToLibrary}
-                    disabled={adding}
-                    style={adding ? {...styles.addButton, ...styles.buttonDisabled} : styles.addButton}
-                  >
-                    {adding ? 'Ajout en cours...' : 'Ajouter à ma bibliothèque'}
-                  </button>
                   <button onClick={handleAnalyze} style={styles.retryButton}>
                     Réanalyser
                   </button>
@@ -447,6 +530,12 @@ const styles = {
     flexDirection: 'column' as const,
     gap: '1rem',
   } as React.CSSProperties,
+  bookActions: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.5rem',
+    alignItems: 'stretch',
+  } as React.CSSProperties,
   bookField: {
     display: 'flex',
     flexDirection: 'column' as const,
@@ -466,12 +555,48 @@ const styles = {
     backgroundColor: '#4CAF50',
     color: 'white',
     border: 'none',
-    padding: '1rem 2rem',
+    padding: '0.75rem 1.5rem',
     borderRadius: '8px',
-    fontSize: '1.1rem',
+    fontSize: '0.95rem',
     cursor: 'pointer',
     fontWeight: 'bold',
-    flex: 1,
+  } as React.CSSProperties,
+  editButton: {
+    backgroundColor: '#FF9800',
+    color: 'white',
+    border: 'none',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  } as React.CSSProperties,
+  saveButton: {
+    backgroundColor: '#4CAF50',
+    color: 'white',
+    border: 'none',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  } as React.CSSProperties,
+  cancelButton: {
+    backgroundColor: '#f44336',
+    color: 'white',
+    border: 'none',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    cursor: 'pointer',
+  } as React.CSSProperties,
+  editInput: {
+    padding: '0.75rem',
+    fontSize: '1.1rem',
+    border: '2px solid #8B7355',
+    borderRadius: '4px',
+    color: '#5D4E37',
+    fontWeight: 'bold',
   } as React.CSSProperties,
   retryButton: {
     backgroundColor: '#8B7355',

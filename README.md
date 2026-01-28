@@ -15,6 +15,7 @@ project/
 - Python 3.8+
 - Node.js 18+
 - MySQL 8.0+ (ou SQLite pour le développement)
+- **Ollama** (pour la fonctionnalité de scan IA)
 
 ## Installation Backend
 
@@ -117,36 +118,47 @@ Le frontend sera accessible sur http://localhost:3000
 - `GET /emprunts/emprunteur/{user_id}` - Emprunts faits par utilisateur
 - `GET /emprunts/emprunter/{user_id}` - Emprunts reçus par utilisateur
 
-### AI - Scan de Livres (Qwen Vision)
-- `POST /ai/analyze-book` - Analyser une image de livre avec IA
-- `POST /ai/add-detected-book` - Ajouter un livre détecté à la bibliothèque
+### AI - Scan de Livres (MiniCPM-V via Ollama)
+- `POST /ai/analyze-book` - Analyser une image de livre avec IA (détection multiple)
+- `POST /ai/add-detected-book` - Ajouter un livre détecté à la bibliothèque personnelle
 
 ## Nouvelle Fonctionnalité : Scanner un Livre avec IA
 
-Cette fonctionnalité utilise **Qwen Vision** pour détecter automatiquement les informations d'un livre à partir d'une photo.
+Cette fonctionnalité utilise **MiniCPM-V** via **Ollama** pour détecter automatiquement les informations de plusieurs livres à partir d'une seule photo.
 
-### Configuration Qwen
+### Configuration Ollama
 
-1. Obtenez une clé API sur [Alibaba Cloud DashScope](https://dashscope.aliyun.com/)
-2. Ajoutez votre clé dans le fichier `.env` du backend :
+1. Installez [Ollama](https://ollama.ai/)
+2. Téléchargez le modèle MiniCPM-V :
+
+```bash
+ollama pull minicpm-v
+```
+
+3. Configurez le fichier `.env` du backend :
 
 ```env
-QWEN_API_KEY=votre_cle_api_qwen
-QWEN_API_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+OLLAMA_API_URL=http://localhost:11434
+LLAVA_MODEL=minicpm-v
 ```
 
 ### Utilisation
 
 1. Connectez-vous à votre compte
 2. Cliquez sur "Scanner un livre" dans le menu
-3. Choisissez une photo de la couverture du livre
+3. Choisissez une photo (peut contenir plusieurs livres)
 4. Cliquez sur "Analyser avec IA"
-5. Vérifiez les informations détectées (titre, auteur, genre)
-6. Cliquez sur "Ajouter à ma bibliothèque"
+5. L'IA détecte automatiquement **tous les livres** visibles
+6. **Modifiez manuellement** les informations si nécessaire (bouton "Modifier")
+7. Cliquez sur "Ajouter" pour chaque livre
 
-### Mode Simulation
+### Avantages
 
-Si aucune clé API n'est configurée, le système fonctionne en **mode simulation** avec des données d'exemple. Parfait pour tester l'interface sans configuration !
+- ✅ **Détection multiple** : analyse plusieurs livres en une seule fois
+- ✅ **OCR ultra-précis** : optimisé pour la reconnaissance de texte (articles, ponctuation)
+- ✅ **Édition manuelle** : corrigez les erreurs avant d'ajouter
+- ✅ **100% local** : aucune clé API nécessaire, données privées
+- ✅ **Gratuit** : pas de frais d'API
 
 ### Installation des dépendances
 
@@ -155,10 +167,9 @@ cd backend
 pip install -r requirements.txt
 ```
 
-Les nouvelles dépendances incluent :
+Les dépendances incluent :
 - `Pillow` - Traitement d'images
-- `requests` - Appels API
-- `openai` - Client API compatible Qwen
+- `requests` - Communication avec Ollama
 
 
 ## Schéma de base de données

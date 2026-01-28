@@ -69,11 +69,17 @@ export default function BibliothequePersonnellePage() {
   };
 
   const handleDeleteLivre = async (bookId: number) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce livre de votre bibliothèque ?')) {
+      return;
+    }
+
     try {
       await biblioAPI.delete(bookId);
       loadLivres();
+      alert('Livre retiré de votre bibliothèque !');
     } catch (error) {
       console.error('Erreur lors de la suppression', error);
+      alert('Erreur lors de la suppression du livre');
     }
   };
 
