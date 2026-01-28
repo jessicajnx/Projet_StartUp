@@ -1,4 +1,4 @@
-# BookExchange
+# Livre2main
 
 Plateforme d'échange de livres entre utilisateurs proches géographiquement.
 
@@ -36,14 +36,17 @@ Pas de configuration requise. La base de données SQLite sera créée automatiqu
 Créer la base de données MySQL:
 
 ```sql
-CREATE DATABASE bookexchange;
+CREATE DATABASE projet_startup;
 ```
+ mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS projet_startup CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+mysql -u root -p projet_startup < projet_startup.sql
+
 
 Créez un fichier `.env` dans le dossier `backend/`:
 
 ```
-DATABASE_URL=mysql+pymysql://root:votre_password@localhost/bookexchange
-SECRET_KEY=votre_cle_secrete_super_securisee
+DATABASE_URL=mysql+pymysql://root:votre_password@localhost/projet_startups
 ```
 
 ### 3. Démarrer le serveur
@@ -113,6 +116,50 @@ Le frontend sera accessible sur http://localhost:3000
 - `DELETE /emprunts/{id}` - Supprimer emprunt
 - `GET /emprunts/emprunteur/{user_id}` - Emprunts faits par utilisateur
 - `GET /emprunts/emprunter/{user_id}` - Emprunts reçus par utilisateur
+
+### AI - Scan de Livres (Qwen Vision)
+- `POST /ai/analyze-book` - Analyser une image de livre avec IA
+- `POST /ai/add-detected-book` - Ajouter un livre détecté à la bibliothèque
+
+## Nouvelle Fonctionnalité : Scanner un Livre avec IA
+
+Cette fonctionnalité utilise **Qwen Vision** pour détecter automatiquement les informations d'un livre à partir d'une photo.
+
+### Configuration Qwen
+
+1. Obtenez une clé API sur [Alibaba Cloud DashScope](https://dashscope.aliyun.com/)
+2. Ajoutez votre clé dans le fichier `.env` du backend :
+
+```env
+QWEN_API_KEY=votre_cle_api_qwen
+QWEN_API_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+```
+
+### Utilisation
+
+1. Connectez-vous à votre compte
+2. Cliquez sur "Scanner un livre" dans le menu
+3. Choisissez une photo de la couverture du livre
+4. Cliquez sur "Analyser avec IA"
+5. Vérifiez les informations détectées (titre, auteur, genre)
+6. Cliquez sur "Ajouter à ma bibliothèque"
+
+### Mode Simulation
+
+Si aucune clé API n'est configurée, le système fonctionne en **mode simulation** avec des données d'exemple. Parfait pour tester l'interface sans configuration !
+
+### Installation des dépendances
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+Les nouvelles dépendances incluent :
+- `Pillow` - Traitement d'images
+- `requests` - Appels API
+- `openai` - Client API compatible Qwen
+
 
 ## Schéma de base de données
 

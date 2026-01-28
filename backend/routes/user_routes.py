@@ -35,6 +35,33 @@ def require_admin(current_user: User = Depends(get_current_user)):
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     return current_user
 
+@router.get("/me/livres", response_model=List)
+def get_current_user_livres(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from schemas import Livre as LivreSchema
+    user = db.query(User).filter(User.id == current_user.id).first()
+    return user.livres
+
+@router.put("/me", response_model=UserSchema)
+def update_current_user(user_update: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Permet à un utilisateur de modifier son propre profil"""
+    update_data = user_update.dict(exclude_unset=True)
+    
+    # Hash du mot de passe si fourni
+    if "mdp" in update_data and update_data["mdp"]:
+        from auth import get_password_hash
+        update_data["mdp"] = get_password_hash(update_data["mdp"])
+    
+    # Empêcher la modification du rôle par un utilisateur normal
+    if "role" in update_data and current_user.role != "Admin":
+        del update_data["role"]
+    
+    for key, value in update_data.items():
+        setattr(current_user, key, value)
+    
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
 @router.get("/", response_model=List[UserSchema])
 def get_all_users(db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     users = db.query(User).all()
@@ -79,4 +106,10 @@ def delete_user(user_id: int, db: Session = Depends(get_db), current_user: User 
 @router.get("/ville/{ville}", response_model=List[UserSchema])
 def get_users_by_ville(ville: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     users = db.query(User).filter(User.villes.like(f"%{ville}%")).all()
+    return users
+
+@router.get("/admin/users-report", response_model=List[UserSchema])
+def get_users_by_report(db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
+    """Récupère tous les users triés par nombre de signalements (décroissant)"""
+    users = db.query(User).order_by(User.signalement.desc()).all()
     return users

@@ -21,6 +21,8 @@ export const authAPI = {
 
 export const userAPI = {
   getMe: () => api.get('/users/me'),
+  getMeLivres: () => api.get('/users/me/livres'),
+  updateMe: (data: any) => api.put('/users/me', data),
   getAll: () => api.get('/users/'),
   getById: (id: number) => api.get(`/users/${id}`),
   update: (id: number, data: any) => api.put(`/users/${id}`, data),
@@ -47,6 +49,12 @@ export const empruntAPI = {
   delete: (id: number) => api.delete(`/emprunts/${id}`),
   getByEmprunteur: (userId: number) => api.get(`/emprunts/emprunteur/${userId}`),
   getByEmprunter: (userId: number) => api.get(`/emprunts/emprunter/${userId}`),
+};
+
+export const biblioAPI = {
+  add: (data: any) => api.post('/bibliotheque-personnelle/', data),
+  listMe: () => api.get('/bibliotheque-personnelle/me'),
+  delete: (id: number) => api.delete(`/bibliotheque-personnelle/${id}`),
 };
 
 export default api;

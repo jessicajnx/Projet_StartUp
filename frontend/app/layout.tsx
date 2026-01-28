@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'BookExchange',
+  title: 'Livre2main',
   description: 'Plateforme d\'échange de livres',
 }
 
