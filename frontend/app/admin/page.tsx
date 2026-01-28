@@ -154,7 +154,7 @@ export default function AdminPage() {
 
   return (
     <div style={styles.container}>
-      <Header />
+      <Header isAdminPage={true} />
       <main style={styles.main}>
         <section style={styles.adminHeader}>
           <h1 style={styles.title}>Gestion Administrateur</h1>
