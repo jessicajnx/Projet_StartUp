@@ -13,16 +13,19 @@ from routes.user_routes import get_current_user
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
-# Configuration pour Qwen (via API compatible OpenAI)
-#QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")
-QWEN_API_KEY="k_343895f567de.cMJvja0uijI9y3SN5GnnOz4XSDobjfXlF-d-JL7Ugue5ahnRD3neEw"
-QWEN_API_URL = os.getenv("QWEN_API_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+
+# Configuration pour LLaVA via Ollama local
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
+LLAVA_MODEL = os.getenv("LLAVA_MODEL", "llava:13b")
 
 def analyze_book_image(image_data: bytes) -> dict:
     """
-    Analyse une image de livre avec Qwen Vision pour extraire les informations
+    Analyse une image de livre avec LLaVA Vision via Ollama pour extraire les informations
     """
+    import json
+    
     try:
+        
         # Convertir l'image en base64
         image = Image.open(BytesIO(image_data))
         
@@ -35,103 +38,84 @@ def analyze_book_image(image_data: bytes) -> dict:
         image.save(buffered, format="JPEG")
         img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
         
-        # Utiliser Qwen via API compatible OpenAI
-        headers = {
-            "Authorization": f"Bearer {QWEN_API_KEY}",
-            "Content-Type": "application/json"
-        }
+        print(f"\n=== Analyse d'image avec {LLAVA_MODEL} ===")
         
+        # Utiliser LLaVA via Ollama local avec un prompt optimisé
         payload = {
-            "model": "qwen-vl-plus",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{img_base64}"
-                            }
-                        },
-                        {
-                            "type": "text",
-                            "text": """Analyse cette image de livre et extrais les informations suivantes au format JSON exact :
+            "model": LLAVA_MODEL,
+            "prompt": """Regarde attentivement cette image de couverture de livre. Je veux que tu identifies :
+1. Le titre exact du livre (tel qu'écrit sur la couverture)
+2. Le nom de l'auteur (tel qu'écrit sur la couverture)
+3. Le genre littéraire du livre
+
+Réponds UNIQUEMENT avec un objet JSON dans ce format exact :
 {
-  "titre": "titre du livre",
-  "auteur": "nom de l'auteur",
-  "genre": "genre littéraire"
+  "titre": "le titre exact du livre",
+  "auteur": "le nom exact de l'auteur",
+  "genre": "le genre"
 }
 
-Si tu ne peux pas identifier certaines informations, utilise null. Réponds UNIQUEMENT avec le JSON, rien d'autre."""
-                        }
-                    ]
-                }
-            ],
-            "max_tokens": 500,
-            "temperature": 0.1
+Ne réponds qu'avec le JSON, rien d'autre.""",
+            "images": [img_base64],
+            "stream": False,
+            "options": {
+                "temperature": 0.1,
+                "num_predict": 200
+            }
         }
         
-        if QWEN_API_KEY and len(QWEN_API_KEY) > 10:
-            try:
-                response = requests.post(
-                    f"{QWEN_API_URL}/chat/completions",
-                    headers=headers,
-                    json=payload,
-                    timeout=30
-                )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    content = result.get("choices", [{}])[0].get("message", {}).get("content", "{}")
-                    
-                    # Parser le JSON de la réponse
-                    import json
-                    try:
-                        # Nettoyer la réponse pour extraire uniquement le JSON
-                        content = content.strip()
-                        if "```json" in content:
-                            content = content.split("```json")[1].split("```")[0].strip()
-                        elif "```" in content:
-                            content = content.split("```")[1].split("```")[0].strip()
-                        
-                        book_info = json.loads(content)
-                        return {
-                            "nom": book_info.get("titre", "Titre inconnu"),
-                            "auteur": book_info.get("auteur", "Auteur inconnu"),
-                            "genre": book_info.get("genre", "Non classifié")
-                        }
-                    except json.JSONDecodeError:
-                        # Fallback au mode simulation
-                        pass
-                else:
-                    # Erreur API - fallback au mode simulation
-                    print(f"Erreur API: {response.status_code} - Passage en mode simulation")
-            except Exception as api_error:
-                # Erreur réseau ou autre - fallback au mode simulation
-                print(f"Erreur connexion API: {api_error} - Passage en mode simulation")
+        # Appel à Ollama
+        print(f"Envoi de la requête à {OLLAMA_API_URL}/api/generate...")
+        response = requests.post(
+            f"{OLLAMA_API_URL}/api/generate",
+            json=payload,
+            timeout=120
+        )
         
-        # Mode simulation GRATUIT - fonctionne toujours !
-        import random
-        livres_simulation = [
-            {"nom": "Le Petit Prince", "auteur": "Antoine de Saint-Exupéry", "genre": "Conte philosophique"},
-            {"nom": "1984", "auteur": "George Orwell", "genre": "Science-fiction"},
-            {"nom": "Harry Potter à l'école des sorciers", "auteur": "J.K. Rowling", "genre": "Fantasy"},
-            {"nom": "L'Étranger", "auteur": "Albert Camus", "genre": "Roman philosophique"},
-            {"nom": "Les Misérables", "auteur": "Victor Hugo", "genre": "Roman historique"},
-        ]
-        livre = random.choice(livres_simulation)
+        print(f"Statut de la réponse: {response.status_code}")
+        
+        if response.status_code == 200:
+            result = response.json()
+            content = result.get("response", "")
+            
+            print(f"Réponse brute de LLaVA:\n{content}\n")
+            
+            # Nettoyer la réponse pour extraire uniquement le JSON
+            content = content.strip()
+            
+            # Essayer de trouver le JSON dans la réponse
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+            elif "```" in content:
+                content = content.split("```")[1].split("```")[0].strip()
+            
+            # Trouver les accolades
+            start_idx = content.find('{')
+            end_idx = content.rfind('}') + 1
+            if start_idx != -1 and end_idx > start_idx:
+                content = content[start_idx:end_idx]
+            
+            print(f"JSON extrait: {content}")
+            
+            book_info = json.loads(content)
+            result_data = {
+                "nom": book_info.get("titre", "Titre inconnu"),
+                "auteur": book_info.get("auteur", "Auteur inconnu"),
+                "genre": book_info.get("genre", "Non classifié")
+            }
+            print(f"✅ Analyse réussie: {result_data}")
+            return result_data
+        else:
+            error_msg = f"Erreur Ollama: {response.status_code} - {response.text}"
+            print(f"❌ {error_msg}")
+            raise Exception(error_msg)
+            
+    except Exception as e:
+        print(f"❌ Erreur lors de l'analyse: {e}")
+        # Retourner l'erreur au lieu du mode simulation
         return {
-            "nom": livre["nom"],
-            "auteur": livre["auteur"],
-            "genre": livre["genre"],
-<<<<<<< HEAD
-            "note": "Mode simulation GRATUIT - Modifiez les infos si nécessaire avant d'ajouter"
-=======
-            "note":  'Mode simulation'
-            "note": "Mode simulation GRATUIT - Modifiez les infos si nécessaire avant d'ajouter"e: {e}")
-        return {
-            "nom": "Erreur détection",
-            "auteur": "Erreur détection",
+            "nom": "Erreur d'analyse",
+            "auteur": "Erreur d'analyse",
             "genre": "Non classifié",
             "error": str(e)
         }

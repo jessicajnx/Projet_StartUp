@@ -2,6 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db
 from routes import auth_routes, user_routes, livre_routes, emprunt_routes, ai_routes
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement
+load_dotenv()
 
 app = FastAPI(title="Livre2main API", version="1.0.0")
 
