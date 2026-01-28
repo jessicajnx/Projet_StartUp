@@ -319,7 +319,7 @@ export default function ProfilPage() {
 
           <section className={pageStyles.section}>
             <h2 className={pageStyles.sectionTitle}>Mes livres ({isLoadingLivres ? '...' : total})</h2>
-            
+            <br />
             <div className={pageStyles.searchWrapper}>
               <input
                 type="text"
