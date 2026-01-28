@@ -92,7 +92,6 @@ CREATE TABLE IF NOT EXISTS `livre` (
 --
 -- Structure de la table `user`
 --
-
 DROP TABLE IF EXISTS `user`;
 CREATE TABLE IF NOT EXISTS `user` (
   `ID` int NOT NULL AUTO_INCREMENT,
@@ -106,8 +105,8 @@ CREATE TABLE IF NOT EXISTS `user` (
   `Signalement` int DEFAULT '0',
   `liste_livres` json DEFAULT NULL,
   PRIMARY KEY (`ID`),
-  UNIQUE KEY `Email` (`Email`)
-) ;
+  UNIQUE KEY `Email` (`Email`(191))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `user`

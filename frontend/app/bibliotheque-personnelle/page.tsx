@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { biblioAPI } from '@/lib/api';
@@ -72,6 +73,27 @@ export default function BibliothequePersonnellePage() {
       <main style={styles.main}>
         <div style={styles.content}>
           <h1 style={styles.title}>Ma Bibliothèque Personnelle</h1>
+
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+            <Link href="/map">
+              <button style={{
+                backgroundColor: '#10b981',
+                color: 'white',
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
+              >
+                🗺️ Voir la carte
+              </button>
+            </Link>
+          </div>
 
           <section style={styles.statsSection}>
             <div style={styles.statCard}>
