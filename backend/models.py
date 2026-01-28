@@ -47,6 +47,7 @@ class Emprunt(Base):
     emprunteur = relationship("User", foreign_keys=[id_user1], back_populates="emprunts_emprunteur")
     emprunter = relationship("User", foreign_keys=[id_user2], back_populates="emprunts_emprunter")
     livre = relationship("Livre", back_populates="emprunts")
+    messages = relationship("Message", back_populates="emprunt", cascade="all, delete-orphan")
 
 
 class BibliothequePersonnelle(Base):
@@ -64,3 +65,17 @@ class BibliothequePersonnelle(Base):
     created_at = Column("CreatedAt", DateTime, default=datetime.utcnow, nullable=False)
 
     user = relationship("User", back_populates="personal_books")
+
+class Message(Base):
+    __tablename__ = "message"
+
+    id = Column("ID", Integer, primary_key=True, index=True)
+    id_emprunt = Column("IDEmprunt", Integer, ForeignKey("Emprunt.ID"), nullable=False)
+    id_sender = Column("IDSender", Integer, ForeignKey("User.ID"), nullable=False)
+    message_text = Column("MessageText", String(2000), nullable=False)
+    datetime = Column("DateTime", DateTime, default=datetime.utcnow, nullable=False)
+    is_read = Column("IsRead", Integer, default=0)
+
+    # Relations
+    emprunt = relationship("Emprunt", back_populates="messages")
+    sender = relationship("User", foreign_keys=[id_sender], backref="sent_messages")

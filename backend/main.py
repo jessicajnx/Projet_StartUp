@@ -8,6 +8,7 @@ from routes import (
     emprunt_routes,
     ai_routes,
     bibliotheque_routes,
+    message_routes
 )
 
 app = FastAPI(title="Livre2main API", version="1.0.0")
@@ -26,6 +27,7 @@ app.include_router(livre_routes.router)
 app.include_router(emprunt_routes.router)
 app.include_router(ai_routes.router)
 app.include_router(bibliotheque_routes.router)
+app.include_router(message_routes.router)
 
 @app.on_event("startup")
 def on_startup():

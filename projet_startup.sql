@@ -119,6 +119,20 @@ INSERT INTO `user` (`ID`, `Name`, `Surname`, `Role`, `Villes`, `MDP`, `Email`, `
 (4, 'giulian', 'fontaine', 'Pauvre', 'Thiais', '$2b$12$bIcno/AUyxVf4Xp0lwCLVud58DimrSIu4x5DUf1OL09HOBLuqesH2', 'giugiu@free.fr', 12, 0, NULL),
 (5, 'giulian', 'lol', 'Pauvre', 'Thiais', '$2b$12$q1B8vQ9CyYObgaQ5KxeU1ONwCglHYv8YpCeV8yP9w4sdogfr9zh2m', 'giugiu1@free.fr', 12, 0, NULL);
 
+DROP TABLE IF EXISTS `message`;
+CREATE TABLE IF NOT EXISTS `message` (
+  `ID` int NOT NULL AUTO_INCREMENT,
+  `IDEmprunt` int NOT NULL COMMENT 'Référence à l\'emprunt concerné',
+  `IDSender` int NOT NULL COMMENT 'ID de l\'utilisateur qui envoie le message',
+  `MessageText` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `DateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `IsRead` tinyint(1) DEFAULT '0' COMMENT 'Statut de lecture du message',
+  PRIMARY KEY (`ID`),
+  KEY `fk_message_emprunt` (`IDEmprunt`),
+  KEY `fk_message_sender` (`IDSender`),
+  KEY `idx_datetime` (`DateTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 --
 -- Contraintes pour les tables déchargées
 --
@@ -141,3 +155,8 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- Contraintes pour la table `message`
+ALTER TABLE `message`
+  ADD CONSTRAINT `fk_message_emprunt` FOREIGN KEY (`IDEmprunt`) REFERENCES `emprunt` (`ID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_message_sender` FOREIGN KEY (`IDSender`) REFERENCES `user` (`ID`) ON DELETE CASCADE;
