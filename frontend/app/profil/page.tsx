@@ -266,6 +266,7 @@ export default function ProfilPage() {
 
           <section className={pageStyles.section}>
             <h2 className={pageStyles.sectionTitle}>Rechercher un livre</h2>
+            <br />
             <input
               type="text"
               placeholder="Rechercher par titre ou auteur..."
