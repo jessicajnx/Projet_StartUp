@@ -1,0 +1,93 @@
+/* Typography */
+.title {
+  font-size: 2.5rem;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: var(--color-text-light);
+  margin: 0;
+  text-align: center;
+}
+
+.sectionTitle {
+  text-align: center;
+  color: var(--color-secondary);
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  font-weight: 700;
+}
+
+.bookTitle {
+  font-size: 1.2rem;
+  color: var(--color-text);
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.6rem;
+}
+
+.bookAuthor {
+  font-size: 0.95rem;
+  color: var(--color-primary-light);
+  margin: 0;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.description {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+.textError {
+  color: var(--color-error);
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.textSuccess {
+  color: var(--color-success-text);
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.searchInfo {
+  text-align: center;
+  color: var(--color-text);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  font-size: 1.05rem;
+}
+
+/* Hero Section */
+.heroTitle {
+  font-size: 3rem;
+  color: var(--color-secondary);
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.heroSubtitle {
+  font-size: 1.5rem;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.heroDescription {
+  font-size: 1.2rem;
+  color: var(--color-text);
+  margin-bottom: 2rem;
+}
