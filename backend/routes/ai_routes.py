@@ -14,13 +14,13 @@ from routes.user_routes import get_current_user
 router = APIRouter(prefix="/ai", tags=["AI"])
 
 
-# Configuration pour LLaVA via Ollama local
+# Configuration pour MiniCPM-V via Ollama local
 OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
-LLAVA_MODEL = os.getenv("LLAVA_MODEL", "llava:13b")
+VISION_MODEL = os.getenv("VISION_MODEL", "minicpm-v")
 
 def analyze_book_image(image_data: bytes) -> dict:
     """
-    Analyse une image de livre avec LLaVA Vision via Ollama pour extraire les informations
+    Analyse une image de livre avec MiniCPM-V via Ollama pour extraire les informations
     """
     import json
     
@@ -38,11 +38,11 @@ def analyze_book_image(image_data: bytes) -> dict:
         image.save(buffered, format="JPEG")
         img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
         
-        print(f"\n=== Analyse d'image avec {LLAVA_MODEL} ===")
+        print(f"\n=== Analyse d'image avec {VISION_MODEL} ===")
         
-        # Utiliser LLaVA via Ollama local avec un prompt optimisé
+        # Utiliser MiniCPM-V via Ollama local avec un prompt optimisé
         payload = {
-            "model": LLAVA_MODEL,
+            "model": VISION_MODEL,
             "prompt": """Tu es un expert en reconnaissance optique de caractères (OCR). Analyse cette image avec la plus grande PRÉCISION.
 
 TÂCHE : Identifie chaque livre visible et extrais :
@@ -89,7 +89,7 @@ RÉPONDS UNIQUEMENT avec le JSON.""",
             result = response.json()
             content = result.get("response", "")
             
-            print(f"Réponse brute de LLaVA:\n{content}\n")
+            print(f"Réponse brute du modèle:\n{content}\n")
             
             # Nettoyer la réponse pour extraire uniquement le JSON
             content = content.strip()
