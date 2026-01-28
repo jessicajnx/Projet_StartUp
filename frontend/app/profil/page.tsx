@@ -318,20 +318,8 @@ export default function ProfilPage() {
           </section>
 
           <section className={pageStyles.section}>
-<<<<<<< HEAD
-            <h2 className={pageStyles.sectionTitle}>Rechercher un livre</h2>
-            <br />
-            <input
-              type="text"
-              placeholder="Rechercher par titre ou auteur..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={formStyles.searchInput}
-            />
-          </section>
-=======
             <h2 className={pageStyles.sectionTitle}>Mes livres ({isLoadingLivres ? '...' : total})</h2>
-            <br />
+            
             <div className={pageStyles.searchWrapper}>
               <input
                 type="text"
@@ -341,7 +329,6 @@ export default function ProfilPage() {
                 className={formStyles.searchInput}
               />
             </div>
->>>>>>> 85ba8246be57d2515f95260540e60b0b12b93aaa
 
             {isLoadingLivres ? (
               <div className={stateStyles.loading}>
