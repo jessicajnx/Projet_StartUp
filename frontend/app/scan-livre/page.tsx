@@ -98,7 +98,6 @@ export default function ScanLivrePage() {
         },
       });
 
-      alert('Livre ajouté à votre bibliothèque !');
       router.push('/bibliotheque-personnelle');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erreur lors de l\'ajout');
