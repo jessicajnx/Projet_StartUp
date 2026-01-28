@@ -286,6 +286,7 @@ const styles = {
     flex: 1,
     backgroundColor: '#F5E6D3',
     padding: '2rem',
+    overflow: 'hidden',
   } as React.CSSProperties,
   content: {
     maxWidth: '1400px',
@@ -306,6 +307,7 @@ const styles = {
     borderRadius: '8px',
     overflow: 'hidden',
     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    minHeight: 0,
   } as React.CSSProperties,
   conversationsList: {
     borderRight: '1px solid #D4B59E',
@@ -400,6 +402,8 @@ const styles = {
   messagesArea: {
     display: 'flex',
     flexDirection: 'column' as const,
+    height: '100%',
+    minHeight: 0,
   } as React.CSSProperties,
   messagesHeader: {
     padding: '1.5rem',
@@ -433,6 +437,7 @@ const styles = {
   } as React.CSSProperties,
   messagesList: {
     flex: 1,
+    minHeight: 0,
     overflowY: 'auto' as const,
     padding: '1.5rem',
     display: 'flex',
