@@ -6,21 +6,62 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState, type CSSProperties } from 'react';
 
+// Fonction pour vérifier si un token JWT est valide
+function isTokenValid(token: string | null): boolean {
+  if (!token) return false;
+  
+  try {
+    const base64Url = token.split(".")[1];
+    if (!base64Url) return false;
+    
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    
+    const decoded = JSON.parse(jsonPayload);
+    const now = Math.floor(Date.now() / 1000);
+    
+    // Vérifier si le token a expiré
+    return decoded.exp > now;
+  } catch (e) {
+    return false;
+  }
+}
+
 export default function Home() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
+    
+    // Vérifier si le token existe ET est valide
+    if (isTokenValid(token)) {
+      setIsAuthenticated(true);
+    } else {
+      // Si le token est expiré, le supprimer
+      if (token) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userName');
+      }
+      setIsAuthenticated(false);
+    }
   }, []);
 
-  const handleCtaClick = () => {
+  const handleAddToLibrary = () => {
     if (isAuthenticated) {
       router.push('/recherche');
     } else {
       router.push('/register');
     }
+  };
+
+  const handleStartExchange = () => {
+    // À implémenter
   };
 
   return (
@@ -37,9 +78,40 @@ export default function Home() {
           <p style={styles.heroDescription}>
             L'accès à la culture pour tous, même avec un petit budget
           </p>
-          <button type="button" onClick={handleCtaClick} style={styles.ctaButton}>
-            Commencer l'échange
-          </button>
+          <div style={styles.buttonGroup}>
+            <button 
+              type="button" 
+              onClick={handleAddToLibrary} 
+              style={styles.ctaButton}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 14px 24px rgba(139,94,60,0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 10px 18px rgba(139,94,60,0.22)';
+              }}
+            >
+              Ajouter à ma bibliothèque
+            </button>
+            <button 
+              type="button" 
+              onClick={handleStartExchange} 
+              style={styles.ctaButtonSecondary}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#8b5e3c';
+                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#8b5e3c';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              Commencer l'échange
+            </button>
+          </div>
         </section>
 
         {/* Section Photo */}
@@ -155,6 +227,25 @@ const styles = {
     boxShadow: '0 10px 18px rgba(139,94,60,0.22)',
     border: 'none',
     cursor: 'pointer',
+  } as CSSProperties,
+  ctaButtonSecondary: {
+    display: 'inline-block',
+    backgroundColor: 'transparent',
+    color: '#8b5e3c',
+    padding: '1rem 2rem',
+    fontSize: '1.2rem',
+    borderRadius: '10px',
+    textDecoration: 'none',
+    transition: 'all 120ms ease',
+    fontWeight: 600,
+    border: '2px solid #8b5e3c',
+    cursor: 'pointer',
+  } as CSSProperties,
+  buttonGroup: {
+    display: 'flex',
+    gap: '1rem',
+    justifyContent: 'center',
+    flexWrap: 'wrap' as const,
   } as CSSProperties,
   imageSection: {
     padding: '3rem 2rem',
