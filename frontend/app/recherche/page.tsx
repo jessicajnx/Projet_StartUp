@@ -31,6 +31,7 @@ export default function RechercheLivre() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [bookIdMap, setBookIdMap] = useState<Map<string, number>>(new Map()); // source_id -> db_id
   const [popularBooks, setPopularBooks] = useState<Book[]>([]);
   const [loadingPopular, setLoadingPopular] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -114,10 +115,22 @@ export default function RechercheLivre() {
     // Précharge les livres déjà ajoutés pour marquer les boutons
     (async () => {
       try {
-        const res = await biblioAPI.listMe();
-        const ids = new Set<string>((res.data || []).map((b: any) => b.source_id).filter(Boolean));
+        const res = await biblioAPI.listMe(1, 100); // Charger jusqu'à 100 livres
+        console.log("Livres chargés depuis la BDD:", res.data);
+        const books = res.data?.items || [];
+        console.log("Books items:", books);
+        const ids = new Set<string>(books.map((b: any) => b.source_id).filter(Boolean));
+        console.log("Source IDs trouvés:", Array.from(ids));
+        const idMap = new Map<string, number>();
+        books.forEach((b: any) => {
+          if (b.source_id) {
+            idMap.set(b.source_id, b.id);
+          }
+        });
         setAddedIds(ids);
+        setBookIdMap(idMap);
       } catch (e) {
+        console.error("Erreur chargement bibliothèque:", e);
         // silencieux : si non auth, on redirige déjà
       }
     })();
@@ -201,23 +214,50 @@ export default function RechercheLivre() {
   );
 
   const handleAddToLibrary = async (book: Book) => {
-    setSaveMessage(null);
     setSavingId(book.id);
     try {
-      await biblioAPI.add({
-        title: book.title,
-        authors: book.authors,
-        cover_url: book.thumbnail,
-        info_link: book.infoLink,
-        description: book.description,
-        source: "google_books",
-        source_id: book.id,
-      });
-      setSaveMessage(`“${book.title}” ajouté à votre bibliothèque.`);
-      setAddedIds((prev) => new Set([...prev, book.id]));
+      const isAdded = addedIds.has(book.id);
+      console.log(`Livre ${book.id} - isAdded:`, isAdded);
+      
+      if (isAdded) {
+        // Retirer le livre
+        const dbId = bookIdMap.get(book.id);
+        console.log(`Retrait du livre ${book.id}, dbId:`, dbId);
+        if (dbId) {
+          await biblioAPI.delete(dbId);
+          setAddedIds((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(book.id);
+            return newSet;
+          });
+          setBookIdMap((prev) => {
+            const newMap = new Map(prev);
+            newMap.delete(book.id);
+            return newMap;
+          });
+        }
+      } else {
+        // Ajouter le livre
+        console.log(`Ajout du livre:`, book);
+        const res = await biblioAPI.add({
+          title: book.title,
+          authors: book.authors,
+          cover_url: book.thumbnail,
+          info_link: book.infoLink,
+          description: book.description,
+          source: "google_books",
+          source_id: book.id,
+        });
+        console.log("Réponse API add:", res.data);
+        setAddedIds((prev) => new Set([...prev, book.id]));
+        // Stocker l'ID de la BDD pour pouvoir supprimer plus tard
+        if (res.data?.id) {
+          console.log(`Stockage mapping: ${book.id} -> ${res.data.id}`);
+          setBookIdMap((prev) => new Map(prev).set(book.id, res.data.id));
+        }
+      }
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || err?.message || "Ajout impossible";
-      setSaveMessage(msg);
+      console.error("Erreur lors de l'ajout/retrait:", err);
     } finally {
       setSavingId(null);
     }
@@ -280,16 +320,15 @@ export default function RechercheLivre() {
                 )}
                 <button
                   type="button"
-                  style={styles.linkButton}
+                  style={addedIds.has(book.id) ? styles.removeButton : styles.linkButton}
                   onClick={() => handleAddToLibrary(book)}
-                  disabled={savingId === book.id || addedIds.has(book.id)}
+                  disabled={savingId === book.id}
                 >
-                  {savingId === book.id ? "Ajout..." : addedIds.has(book.id) ? "Ajouté" : "Ajouter à ma bibliothèque"}
+                  {savingId === book.id ? (addedIds.has(book.id) ? "Retrait..." : "Ajout...") : addedIds.has(book.id) ? "Dans ma bibliothèque" : "Ajouter à ma bibliothèque"}
                 </button>
               </article>
             ))}
           </div>
-          {saveMessage && <p style={styles.info}>{saveMessage}</p>}
         </section>
 
         {/* Section Livres Populaires */}
@@ -325,11 +364,11 @@ export default function RechercheLivre() {
                     )}
                     <button
                       type="button"
-                      style={styles.linkButton}
+                      style={addedIds.has(book.id) ? styles.removeButton : styles.linkButton}
                       onClick={() => handleAddToLibrary(book)}
-                      disabled={savingId === book.id || addedIds.has(book.id)}
+                      disabled={savingId === book.id}
                     >
-                      {savingId === book.id ? "Ajout..." : addedIds.has(book.id) ? "Ajouté" : "Ajouter à ma bibliothèque"}
+                      {savingId === book.id ? (addedIds.has(book.id) ? "Retrait..." : "Ajout...") : addedIds.has(book.id) ? "Dans ma bibliothèque" : "Ajouter à ma bibliothèque"}
                     </button>
                   </article>
                 ))}
@@ -576,6 +615,17 @@ const styles: Record<string, CSSProperties> = {
     cursor: "pointer",
     fontWeight: 600,
     boxShadow: "0 6px 12px rgba(139,94,60,0.2)",
+  },
+  removeButton: {
+    alignSelf: "flex-start",
+    background: "#5c4b3a",
+    color: "white",
+    padding: "8px 12px",
+    borderRadius: "10px",
+    border: "none",
+    cursor: "pointer",
+    fontWeight: 600,
+    boxShadow: "0 6px 12px rgba(92,75,58,0.2)",
   },
   error: {
     color: "#b42318",
