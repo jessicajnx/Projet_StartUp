@@ -17,15 +17,24 @@ def create_livre(livre: LivreCreate, db: Session = Depends(get_db), current_user
     db.refresh(db_livre)
     return db_livre
 
-@router.get("/count")
-def get_livres_count(db: Session = Depends(get_db)):
+@router.get("/", response_model=LivresPaginated)
+def get_all_livres(
+    page: int = Query(1, ge=1, description="Numéro de page (commence à 1)"),
+    page_size: int = Query(10, ge=1, le=100, description="Nombre d'éléments par page"),
+    db: Session = Depends(get_db)
+):
     total = db.query(Livre).count()
-    return {"total": total}
+    skip = (page - 1) * page_size
+    livres = db.query(Livre).offset(skip).limit(page_size).all()
+    total_pages = math.ceil(total / page_size) if total > 0 else 1
 
-@router.get("/", response_model=List[LivreSchema])
-def get_all_livres(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    livres = db.query(Livre).offset(skip).limit(limit).all()
-    return livres
+    return LivresPaginated(
+        items=livres,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages
+    )
 
 @router.get("/{livre_id}", response_model=LivreSchema)
 def get_livre(livre_id: int, db: Session = Depends(get_db)):

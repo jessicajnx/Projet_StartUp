@@ -31,6 +31,7 @@ export default function Livres() {
   const [error, setError] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [bookIdMap, setBookIdMap] = useState<Map<string, number>>(new Map());
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
 
@@ -59,9 +60,17 @@ export default function Livres() {
 
   const loadMyBooks = async () => {
     try {
-      const res = await biblioAPI.listMe(1, 1000);
-      const ids = new Set<string>((res.data.items || []).map((b: any) => b.source_id).filter(Boolean));
+      const res = await biblioAPI.listMe(1, 100);
+      const books = res.data?.items || [];
+      const ids = new Set<string>(books.map((b: any) => b.source_id).filter(Boolean));
+      const idMap = new Map<string, number>();
+      books.forEach((b: any) => {
+        if (b.source_id) {
+          idMap.set(b.source_id, b.id);
+        }
+      });
       setAddedIds(ids);
+      setBookIdMap(idMap);
     } catch (e) {
       console.error('Erreur lors du chargement de mes livres', e);
     }
@@ -165,28 +174,47 @@ export default function Livres() {
   };
 
   const handleAddToLibrary = async (book: Book) => {
-    if (addedIds.has(book.id)) {
-      alert('Ce livre est déjà dans votre bibliothèque');
-      return;
-    }
+    setSavingId(book.id);
 
     try {
-      setSavingId(book.id);
-      await biblioAPI.add({
-        title: book.title,
-        authors: book.authors,
-        cover_url: book.thumbnail,
-        info_link: book.infoLink,
-        description: book.description,
-        source_id: book.id,
-        source: 'google_books',
-      });
-      
-      setAddedIds(prev => new Set(prev).add(book.id));
-      alert('Livre ajouté à votre bibliothèque !');
+      const isAdded = addedIds.has(book.id);
+
+      if (isAdded) {
+        // Retirer le livre
+        const dbId = bookIdMap.get(book.id);
+        if (dbId) {
+          await biblioAPI.delete(dbId);
+          setAddedIds((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(book.id);
+            return newSet;
+          });
+          setBookIdMap((prev) => {
+            const newMap = new Map(prev);
+            newMap.delete(book.id);
+            return newMap;
+          });
+        }
+      } else {
+        // Ajouter le livre
+        const res = await biblioAPI.add({
+          title: book.title,
+          authors: book.authors,
+          cover_url: book.thumbnail,
+          info_link: book.infoLink,
+          description: book.description,
+          source_id: book.id,
+          source: 'google_books',
+        });
+
+        setAddedIds(prev => new Set(prev).add(book.id));
+        // Stocker l'ID de la BDD pour pouvoir supprimer plus tard
+        if (res.data?.id) {
+          setBookIdMap((prev) => new Map(prev).set(book.id, res.data.id));
+        }
+      }
     } catch (err) {
-      console.error('Erreur lors de l\'ajout', err);
-      alert('Erreur lors de l\'ajout du livre');
+      console.error('Erreur lors de l\'ajout/retrait', err);
     } finally {
       setSavingId(null);
     }
@@ -271,8 +299,12 @@ export default function Livres() {
                       )}
                       <div className={cardStyles.cardFooter}>
                         {isInMyLibrary ? (
-                          <button className={`${buttonStyles.btn} ${buttonStyles.btnSuccess} ${buttonStyles.btnFull}`} disabled>
-                            Dans ma bibliothèque
+                          <button
+                            onClick={() => handleAddToLibrary(livre)}
+                            disabled={isSaving}
+                            className={`${buttonStyles.btn} ${buttonStyles.btnDanger} ${buttonStyles.btnFull}`}
+                          >
+                            {isSaving ? 'Retrait...' : 'Retirer'}
                           </button>
                         ) : (
                           <button
