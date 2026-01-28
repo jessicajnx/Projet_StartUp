@@ -6,9 +6,10 @@ import { useEffect, useState, type CSSProperties } from 'react';
 
 type HeaderProps = {
   hideAuthActions?: boolean;
+  isAdminPage?: boolean;
 };
 
-export default function Header({ hideAuthActions = false }: HeaderProps) {
+export default function Header({ hideAuthActions = false, isAdminPage = false }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -38,16 +39,40 @@ export default function Header({ hideAuthActions = false }: HeaderProps) {
     router.push('/');
   };
 
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isAdminPage) {
+      router.push('/admin');
+    } else {
+      router.push('/');
+    }
+  };
+
   return (
     <header style={styles.header}>
       <div style={styles.container}>
-        <Link href="/" style={styles.logo}>
+        <Link 
+          href={isAdminPage ? '/admin' : '/'}
+          style={styles.logo}
+        >
           <h1>Livre2Main</h1>
         </Link>
         
         {!hideAuthActions && (
           <nav style={styles.nav}>
-            {isAuthenticated ? (
+            {isAdminPage ? (
+              <>
+                <Link href="/profil" style={styles.link}>
+                  Profil
+                </Link>
+                <Link href="/admin" style={styles.link}>
+                  Gérer les utilisateurs
+                </Link>
+                <button onClick={handleLogout} style={styles.button}>
+                  Déconnexion
+                </button>
+              </>
+            ) : isAuthenticated ? (
               <>
                 <Link href="/profil" style={styles.link}>
                   Profil

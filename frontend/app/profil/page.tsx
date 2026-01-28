@@ -37,6 +37,7 @@ export default function ProfilPage() {
   const [emprunts, setEmprunts] = useState<Emprunt[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     surname: '',
@@ -46,11 +47,25 @@ export default function ProfilPage() {
     mdp: '',
   });
 
+  const decodeTokenRole = (token: string): string | null => {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload?.role ?? null;
+    } catch (e) {
+      return null;
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/login');
       return;
+    }
+    
+    const role = decodeTokenRole(token);
+    if (role === 'Admin') {
+      setIsAdmin(true);
     }
     
     loadUserData();
@@ -127,7 +142,7 @@ export default function ProfilPage() {
 
   return (
     <div style={styles.container}>
-      <Header />
+      <Header isAdminPage={isAdmin} />
       
       <main style={styles.main}>
         <div style={styles.content}>
