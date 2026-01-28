@@ -133,6 +133,16 @@ export default function BibliothequePersonnellePage() {
                           <button 
                             onClick={() => handleDeleteLivre(book.id)}
                             style={styles.deleteButton}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#8B5E3C';
+                              e.currentTarget.style.color = 'white';
+                              e.currentTarget.style.transform = 'translateY(-1px)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                              e.currentTarget.style.color = '#8B5E3C';
+                              e.currentTarget.style.transform = 'translateY(0)';
+                            }}
                           >
                             Retirer
                           </button>
@@ -296,13 +306,15 @@ const styles = {
     justifyContent: 'center',
   } as React.CSSProperties,
   deleteButton: {
-    backgroundColor: '#d9534f',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem 1rem',
-    borderRadius: '6px',
+    backgroundColor: 'transparent',
+    color: '#8B5E3C',
+    border: '2px solid #8B5E3C',
+    padding: '0.75rem 1.2rem',
+    borderRadius: '10px',
     cursor: 'pointer',
     fontSize: '0.9rem',
+    fontWeight: '600',
     minWidth: '110px',
+    transition: 'all 120ms ease',
   } as React.CSSProperties,
 };
