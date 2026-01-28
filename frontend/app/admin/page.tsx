@@ -71,10 +71,12 @@ export default function AdminPage() {
       const response = await api.get("/users/admin/users-report");
       setUsers(response.data || []);
     } catch (err: any) {
-      setError(
-        err?.response?.data?.detail ||
-          "Erreur lors du chargement des utilisateurs"
-      );
+      const errorMsg = err?.response?.data?.detail 
+        ? (typeof err.response.data.detail === 'string' 
+            ? err.response.data.detail 
+            : JSON.stringify(err.response.data.detail))
+        : "Erreur lors du chargement des utilisateurs";
+      setError(errorMsg);
       if (err?.response?.status === 401 || err?.response?.status === 403) {
         router.push("/login");
       }
@@ -108,7 +110,12 @@ export default function AdminPage() {
       setEditingUser(null);
       await fetchUsers();
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Erreur lors de la mise à jour");
+      const errorMsg = err?.response?.data?.detail 
+        ? (typeof err.response.data.detail === 'string' 
+            ? err.response.data.detail 
+            : JSON.stringify(err.response.data.detail))
+        : "Erreur lors de la mise à jour";
+      setError(errorMsg);
     } finally {
       setEditLoading(false);
     }
@@ -119,7 +126,12 @@ export default function AdminPage() {
       await api.delete(`/users/${userId}`);
       await fetchUsers();
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Erreur lors de la suppression");
+      const errorMsg = err?.response?.data?.detail 
+        ? (typeof err.response.data.detail === 'string' 
+            ? err.response.data.detail 
+            : JSON.stringify(err.response.data.detail))
+        : "Erreur lors de la suppression";
+      setError(errorMsg);
     }
   };
 
@@ -212,7 +224,11 @@ export default function AdminPage() {
             </button>
           </div>
 
-          {error && <p style={styles.error}>{error}</p>}
+          {error && (
+            <p style={styles.error}>
+              {typeof error === 'string' ? error : JSON.stringify(error)}
+            </p>
+          )}
 
           {loading ? (
             <p style={styles.loading}>Chargement...</p>
