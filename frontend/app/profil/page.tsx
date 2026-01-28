@@ -4,7 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { userAPI, empruntAPI } from '@/lib/api';
+import { userAPI, biblioAPI } from '@/lib/api';
+import pageStyles from '@/styles/profil.module.css';
+import cardStyles from '@/styles/cards.module.css';
+import formStyles from '@/styles/forms.module.css';
+import bibliothequeStyles from '@/styles/bibliotheque.module.css';
 
 interface User {
   id: number;
@@ -16,28 +20,32 @@ interface User {
   role: string;
 }
 
-interface Livre {
+interface PersonalBook {
   id: number;
-  nom: string;
-  auteur: string;
-  genre?: string;
+  user_id: number;
+  title: string;
+  authors?: string[];
+  cover_url?: string;
+  info_link?: string;
+  description?: string;
 }
 
-interface Emprunt {
-  id: number;
-  id_user1: number;
-  id_user2: number;
-  datetime: string;
+interface PersonalBooksResponse {
+  items: PersonalBook[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
 }
 
 export default function ProfilPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [livres, setLivres] = useState<Livre[]>([]);
-  const [emprunts, setEmprunts] = useState<Emprunt[]>([]);
+  const [livres, setLivres] = useState<PersonalBook[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoadingLivres, setIsLoadingLivres] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     surname: '',
@@ -84,11 +92,21 @@ export default function ProfilPage() {
         mdp: '',
       });
 
-      const livresResponse = await userAPI.getMeLivres();
-      setLivres(livresResponse.data);
-
-      const empruntsResponse = await empruntAPI.getByUser(userResponse.data.id);
-      setEmprunts(empruntsResponse.data);
+      // Charger tous les livres de la bibliothèque personnelle (avec une grande limite)
+      setIsLoadingLivres(true);
+      try {
+        const livresResponse = await biblioAPI.listMe(1, 1000);
+        console.log('Livres response:', livresResponse.data);
+        const data = livresResponse.data as PersonalBooksResponse;
+        const books = data.items || [];
+        console.log('Livres chargés:', books.length);
+        setLivres(books);
+      } catch (livresError) {
+        console.error('Erreur lors du chargement des livres:', livresError);
+        setLivres([]);
+      } finally {
+        setIsLoadingLivres(false);
+      }
     } catch (error) {
       console.error('Erreur lors du chargement des données', error);
     }
@@ -124,16 +142,8 @@ export default function ProfilPage() {
   };
 
   const filteredLivres = livres.filter(livre =>
-    livre.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    livre.auteur.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const livresEchanges = filteredLivres.filter(livre =>
-    emprunts.some(e => e.id_user1 === user?.id || e.id_user2 === user?.id)
-  );
-
-  const livresNonEchanges = filteredLivres.filter(livre =>
-    !emprunts.some(e => e.id_user1 === user?.id || e.id_user2 === user?.id)
+    livre.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (livre.authors || []).join(' ').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (!user) {
@@ -141,150 +151,160 @@ export default function ProfilPage() {
   }
 
   return (
-    <div style={styles.container}>
+    <div className={pageStyles.container}>
       <Header isAdminPage={isAdmin} />
       
-      <main style={styles.main}>
-        <div style={styles.content}>
-          <h1 style={styles.title}>Mon Profil</h1>
+      <main className={pageStyles.main}>
+        <div className={pageStyles.content}>
+          <h1 className={pageStyles.title}>Mon Profil</h1>
 
-          {/* Informations personnelles */}
-          <section style={styles.section}>
-            <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>Informations personnelles</h2>
+          <section className={pageStyles.section}>
+            <div className={pageStyles.sectionHeader}>
+              <h2 className={pageStyles.sectionTitle}>Informations personnelles</h2>
               {!isEditing && (
-                <button onClick={() => setIsEditing(true)} style={styles.editButton}>
+                <button onClick={() => setIsEditing(true)} className={pageStyles.editButton}>
                   Modifier mes informations
                 </button>
               )}
             </div>
 
             {isEditing ? (
-              <div style={styles.form}>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Prénom:</label>
+              <div className={pageStyles.form}>
+                <div className={formStyles.formGroup}>
+                  <label className={formStyles.label}>Prénom:</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    style={styles.input}
+                    className={formStyles.input}
                   />
                 </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Nom:</label>
+                <div className={formStyles.formGroup}>
+                  <label className={formStyles.label}>Nom:</label>
                   <input
                     type="text"
                     value={formData.surname}
                     onChange={(e) => setFormData({...formData, surname: e.target.value})}
-                    style={styles.input}
+                    className={formStyles.input}
                   />
                 </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Email:</label>
+                <div className={formStyles.formGroup}>
+                  <label className={formStyles.label}>Email:</label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    style={styles.input}
+                    className={formStyles.input}
                   />
                 </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Ville:</label>
+                <div className={formStyles.formGroup}>
+                  <label className={formStyles.label}>Ville:</label>
                   <input
                     type="text"
                     value={formData.villes}
                     onChange={(e) => setFormData({...formData, villes: e.target.value})}
-                    style={styles.input}
+                    className={formStyles.input}
                   />
                 </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Âge:</label>
+                <div className={formStyles.formGroup}>
+                  <label className={formStyles.label}>Âge:</label>
                   <input
                     type="number"
                     value={formData.age}
                     onChange={(e) => setFormData({...formData, age: parseInt(e.target.value)})}
-                    style={styles.input}
+                    className={formStyles.input}
                   />
                 </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Nouveau mot de passe (laisser vide pour ne pas modifier):</label>
+                <div className={formStyles.formGroup}>
+                  <label className={formStyles.label}>Nouveau mot de passe (laisser vide pour ne pas modifier):</label>
                   <input
                     type="password"
                     value={formData.mdp}
                     onChange={(e) => setFormData({...formData, mdp: e.target.value})}
-                    style={styles.input}
+                    className={formStyles.input}
                     placeholder="Nouveau mot de passe"
                   />
                 </div>
-                <div style={styles.buttonGroup}>
-                  <button onClick={handleUpdateProfile} style={styles.saveButton}>
-                    Enregistrer
-                  </button>
-                  <button onClick={() => setIsEditing(false)} style={styles.cancelButton}>
+                <div className={pageStyles.formActions}>
+                  <button onClick={() => setIsEditing(false)} className={pageStyles.btnSecondary}>
                     Annuler
+                  </button>
+                  <button onClick={handleUpdateProfile} className={pageStyles.btnPrimary}>
+                    Enregistrer
                   </button>
                 </div>
               </div>
             ) : (
-              <div style={styles.infoCard}>
-                <p><strong>Prénom:</strong> {user.name}</p>
-                <p><strong>Nom:</strong> {user.surname}</p>
-                <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Ville:</strong> {user.villes}</p>
-                <p><strong>Âge:</strong> {user.age} ans</p>
-                <p><strong>Abonnement:</strong> {user.role}</p>
+              <div className={pageStyles.infoGrid}>
+                <div className={pageStyles.infoItem}>
+                  <span className={pageStyles.infoLabel}>Prénom:</span>
+                  <span className={pageStyles.infoValue}>{user.name}</span>
+                </div>
+                <div className={pageStyles.infoItem}>
+                  <span className={pageStyles.infoLabel}>Nom:</span>
+                  <span className={pageStyles.infoValue}>{user.surname}</span>
+                </div>
+                <div className={pageStyles.infoItem}>
+                  <span className={pageStyles.infoLabel}>Email:</span>
+                  <span className={pageStyles.infoValue}>{user.email}</span>
+                </div>
+                <div className={pageStyles.infoItem}>
+                  <span className={pageStyles.infoLabel}>Ville:</span>
+                  <span className={pageStyles.infoValue}>{user.villes}</span>
+                </div>
+                <div className={pageStyles.infoItem}>
+                  <span className={pageStyles.infoLabel}>Âge:</span>
+                  <span className={pageStyles.infoValue}>{user.age} ans</span>
+                </div>
+                <div className={pageStyles.infoItem}>
+                  <span className={pageStyles.infoLabel}>Abonnement:</span>
+                  <span className={pageStyles.infoValue}>{user.role}</span>
+                </div>
               </div>
             )}
           </section>
 
-          {/* Barre de recherche */}
-          <section style={styles.section}>
-            <h2 style={styles.sectionTitle}>Rechercher un livre</h2>
+          <section className={pageStyles.section}>
+            <h2 className={pageStyles.sectionTitle}>Rechercher un livre</h2>
             <input
               type="text"
               placeholder="Rechercher par titre ou auteur..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={styles.searchInput}
+              className={formStyles.searchInput}
             />
           </section>
 
-          {/* Livres personnels non échangés */}
-          <section style={styles.section}>
-            <h2 style={styles.sectionTitle}>Mes livres disponibles ({livresNonEchanges.length})</h2>
-            <div style={styles.livreGrid}>
-              {livresNonEchanges.length === 0 ? (
-                <p>Aucun livre disponible</p>
-              ) : (
-                livresNonEchanges.map(livre => (
-                  <div key={livre.id} style={styles.livreCard}>
-                    <h3 style={styles.livreTitle}>{livre.nom}</h3>
-                    <p style={styles.livreAuthor}>par {livre.auteur}</p>
-                    {livre.genre && <p style={styles.livreGenre}>{livre.genre}</p>}
-                    <span style={styles.statusBadge}>Disponible</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
-
-          {/* Livres échangés */}
-          <section style={styles.section}>
-            <h2 style={styles.sectionTitle}>Mes livres échangés ({livresEchanges.length})</h2>
-            <div style={styles.livreGrid}>
-              {livresEchanges.length === 0 ? (
-                <p>Aucun livre échangé</p>
-              ) : (
-                livresEchanges.map(livre => (
-                  <div key={livre.id} style={{...styles.livreCard, ...styles.livreCardExchanged}}>
-                    <h3 style={styles.livreTitle}>{livre.nom}</h3>
-                    <p style={styles.livreAuthor}>par {livre.auteur}</p>
-                    {livre.genre && <p style={styles.livreGenre}>{livre.genre}</p>}
-                    <span style={styles.statusBadgeExchanged}>Échangé</span>
-                  </div>
-                ))
-              )}
-            </div>
+          <section className={pageStyles.section}>
+            <h2 className={pageStyles.sectionTitle}>Mes livres ({isLoadingLivres ? '...' : filteredLivres.length})</h2>
+            {isLoadingLivres ? (
+              <p className={pageStyles.emptyMessage}>
+                Chargement de vos livres...
+              </p>
+            ) : filteredLivres.length === 0 ? (
+              <p className={pageStyles.emptyMessage}>
+                {searchQuery ? 'Aucun livre ne correspond à votre recherche.' : 'Aucun livre dans votre bibliothèque.'}
+              </p>
+            ) : (
+              <div className={bibliothequeStyles.livreGrid}>
+                {filteredLivres.map(livre => {
+                  const cover = livre.cover_url || 'https://via.placeholder.com/300x450?text=Livre';
+                  return (
+                    <div key={livre.id} className={bibliothequeStyles.livreCard}>
+                      <div className={cardStyles.coverWrapper}>
+                        <img src={cover} alt={livre.title} className={cardStyles.coverImage} />
+                      </div>
+                      <div className={bibliothequeStyles.meta}>
+                        <h3 className={bibliothequeStyles.livreTitle}>{livre.title}</h3>
+                        {livre.authors && livre.authors.length > 0 && (
+                          <p className={bibliothequeStyles.livreAuthor}>par {livre.authors.join(', ')}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         </div>
       </main>
@@ -293,156 +313,3 @@ export default function ProfilPage() {
     </div>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    minHeight: '100vh',
-  } as React.CSSProperties,
-  main: {
-    flex: 1,
-    backgroundColor: '#F5E6D3',
-    padding: '2rem',
-  } as React.CSSProperties,
-  content: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-  } as React.CSSProperties,
-  title: {
-    color: '#5D4E37',
-    fontSize: '2.5rem',
-    marginBottom: '2rem',
-    textAlign: 'center' as const,
-  } as React.CSSProperties,
-  section: {
-    backgroundColor: 'white',
-    padding: '2rem',
-    borderRadius: '8px',
-    marginBottom: '2rem',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-  } as React.CSSProperties,
-  sectionHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1rem',
-    flexWrap: 'wrap' as const,
-    gap: '1rem',
-  } as React.CSSProperties,
-  sectionTitle: {
-    color: '#5D4E37',
-    fontSize: '1.5rem',
-    marginBottom: '1rem',
-  } as React.CSSProperties,
-  editButton: {
-    backgroundColor: '#8B7355',
-    color: 'white',
-    border: 'none',
-    padding: '0.5rem 1rem',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  } as React.CSSProperties,
-  infoCard: {
-    lineHeight: '2',
-    color: '#5D4E37',
-  } as React.CSSProperties,
-  form: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '1rem',
-  } as React.CSSProperties,
-  formGroup: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '0.5rem',
-  } as React.CSSProperties,
-  label: {
-    fontWeight: 'bold',
-    color: '#5D4E37',
-  } as React.CSSProperties,
-  input: {
-    padding: '0.5rem',
-    border: '1px solid #D4B59E',
-    borderRadius: '4px',
-    fontSize: '1rem',
-  } as React.CSSProperties,
-  buttonGroup: {
-    display: 'flex',
-    gap: '1rem',
-    marginTop: '1rem',
-  } as React.CSSProperties,
-  saveButton: {
-    backgroundColor: '#8B7355',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '1rem',
-  } as React.CSSProperties,
-  cancelButton: {
-    backgroundColor: '#ccc',
-    color: '#333',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '1rem',
-  } as React.CSSProperties,
-  searchInput: {
-    width: '100%',
-    padding: '1rem',
-    border: '2px solid #D4B59E',
-    borderRadius: '8px',
-    fontSize: '1rem',
-  } as React.CSSProperties,
-  livreGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-    gap: '1.5rem',
-  } as React.CSSProperties,
-  livreCard: {
-    backgroundColor: '#F5E6D3',
-    padding: '1.5rem',
-    borderRadius: '8px',
-    border: '2px solid #8B7355',
-    position: 'relative' as const,
-  } as React.CSSProperties,
-  livreCardExchanged: {
-    borderColor: '#D4B59E',
-    opacity: 0.8,
-  } as React.CSSProperties,
-  livreTitle: {
-    color: '#5D4E37',
-    fontSize: '1.2rem',
-    marginBottom: '0.5rem',
-  } as React.CSSProperties,
-  livreAuthor: {
-    color: '#8B7355',
-    marginBottom: '0.5rem',
-  } as React.CSSProperties,
-  livreGenre: {
-    color: '#8B7355',
-    fontSize: '0.9rem',
-    fontStyle: 'italic',
-  } as React.CSSProperties,
-  statusBadge: {
-    display: 'inline-block',
-    backgroundColor: '#4CAF50',
-    color: 'white',
-    padding: '0.25rem 0.75rem',
-    borderRadius: '12px',
-    fontSize: '0.8rem',
-    marginTop: '0.5rem',
-  } as React.CSSProperties,
-  statusBadgeExchanged: {
-    display: 'inline-block',
-    backgroundColor: '#FF9800',
-    color: 'white',
-    padding: '0.25rem 0.75rem',
-    borderRadius: '12px',
-    fontSize: '0.8rem',
-    marginTop: '0.5rem',
-  } as React.CSSProperties,
-};

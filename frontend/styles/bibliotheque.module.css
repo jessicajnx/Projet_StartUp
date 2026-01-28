@@ -1,0 +1,128 @@
+/* Page bibliothèque personnelle */
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  background-color: var(--color-background);
+  padding: 2rem;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.title {
+  color: #5D4E37;
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.statsSection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: white;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.searchSection {
+  margin-bottom: 2rem;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #D4B59E;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  background-color: white;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.genreSection {
+  margin-bottom: 3rem;
+}
+
+.livreGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.livreCard {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: transform 0.2s ease;
+}
+
+.livreCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+}
+
+.meta {
+  text-align: center;
+}
+
+.livreTitle {
+  color: #5D4E37;
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.livreAuthor {
+  color: var(--color-primary-light);
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.actionsRow {
+  display: flex;
+  margin-top: 0.5rem;
+  justify-content: center;
+}
+
+.deleteButton {
+  background-color: transparent;
+  color: #8B5E3C;
+  border: 2px solid #8B5E3C;
+  padding: 0.75rem 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 110px;
+  transition: all 120ms ease;
+}
+
+.deleteButton:hover {
+  background-color: #8B5E3C;
+  color: white;
+  transform: translateY(-1px);
+}

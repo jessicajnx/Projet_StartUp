@@ -1,0 +1,70 @@
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+  margin-top: 2rem;
+  background-color: white;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.paginationButton {
+  padding: 0.5rem 1rem;
+  background-color: var(--color-primary-light);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background-color: var(--color-primary);
+}
+
+.paginationButton:disabled {
+  background-color: #D4B59E;
+  color: var(--color-primary-light);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.pageButton {
+  padding: 0.5rem 0.75rem;
+  background-color: #fff;
+  color: #5D4E37;
+  border: 1px solid #D4B59E;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  min-width: 40px;
+  transition: all 0.2s;
+}
+
+.pageButton:hover {
+  background-color: #f5f5f5;
+}
+
+.pageButtonActive {
+  background-color: var(--color-primary-light);
+  color: #fff;
+  font-weight: 700;
+  border-color: var(--color-primary-light);
+}
+
+.pageEllipsis {
+  padding: 0.5rem 0.25rem;
+  color: #5D4E37;
+}

@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
 from models import Livre, User
-from schemas import Livre as LivreSchema, LivreCreate, LivreUpdate
+from schemas import Livre as LivreSchema, LivreCreate, LivreUpdate, LivresPaginated
 from routes.user_routes import get_current_user
+import math
 
 router = APIRouter(prefix="/livres", tags=["Livres"])
 

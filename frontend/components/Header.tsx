@@ -77,6 +77,9 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
                 <Link href="/profil" style={styles.link}>
                   Profil
                 </Link>
+                <Link href="/livres" style={styles.link}>
+                  Tous les livres
+                </Link>
                 <Link href="/scan-livre" style={styles.link}>
                   Scanner un livre
                 </Link>
