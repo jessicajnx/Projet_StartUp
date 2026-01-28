@@ -8,6 +8,7 @@ from routes import (
     emprunt_routes,
     ai_routes,
     bibliotheque_routes,
+    message_routes
 )
 from dotenv import load_dotenv
 
@@ -30,6 +31,7 @@ app.include_router(livre_routes.router)
 app.include_router(emprunt_routes.router)
 app.include_router(ai_routes.router)
 app.include_router(bibliotheque_routes.router)
+app.include_router(message_routes.router)
 
 @app.on_event("startup")
 def on_startup():

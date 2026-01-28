@@ -57,4 +57,19 @@ export const biblioAPI = {
   delete: (id: number) => api.delete(`/bibliotheque-personnelle/${id}`),
 };
 
+export const messageAPI = {
+  getConversations() {
+    return api.get('/messages/conversations');
+  },
+
+  getMessagesForEmprunt(empruntId: number) {
+    return api.get(`/messages/emprunt/${empruntId}`);
+  },
+
+  sendMessage(data: { id_emprunt: number; message_text: string }) {
+    return api.post('/messages/', data);
+  }
+};
+
+
 export default api;
