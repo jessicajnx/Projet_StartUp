@@ -115,9 +115,6 @@ export default function AdminPage() {
   };
 
   const handleDeleteUser = async (userId: number) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?"))
-      return;
-
     try {
       await api.delete(`/users/${userId}`);
       await fetchUsers();

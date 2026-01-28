@@ -1,0 +1,48 @@
+/* Layout containers */
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+}
+
+.content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2.5rem;
+  background-color: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.contentNarrow {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.contentWide {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Flexbox utilities */
+.flexCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flexColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+.flexBetween {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

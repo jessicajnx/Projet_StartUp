@@ -1,4 +1,4 @@
-from . import auth_routes, user_routes, livre_routes, emprunt_routes, ai_routes, bibliotheque_routes
+from . import auth_routes, user_routes, livre_routes, emprunt_routes, ai_routes, bibliotheque_routes, message_routes
 
 __all__ = [
 	"auth_routes",
@@ -7,4 +7,5 @@ __all__ = [
 	"emprunt_routes",
 	"ai_routes",
 	"bibliotheque_routes",
+    "message_routes"
 ]

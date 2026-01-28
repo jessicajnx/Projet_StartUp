@@ -32,7 +32,7 @@ export const userAPI = {
 
 export const livreAPI = {
   create: (data: any) => api.post('/livres/', data),
-  getAll: () => api.get('/livres/'),
+  getAll: (page: number = 1, pageSize: number = 10) => api.get(`/livres/?page=${page}&page_size=${pageSize}`),
   getById: (id: number) => api.get(`/livres/${id}`),
   update: (id: number, data: any) => api.put(`/livres/${id}`, data),
   delete: (id: number) => api.delete(`/livres/${id}`),
@@ -53,8 +53,23 @@ export const empruntAPI = {
 
 export const biblioAPI = {
   add: (data: any) => api.post('/bibliotheque-personnelle/', data),
-  listMe: () => api.get('/bibliotheque-personnelle/me'),
+  listMe: (page: number = 1, pageSize: number = 10) => api.get(`/bibliotheque-personnelle/me?page=${page}&page_size=${pageSize}`),
   delete: (id: number) => api.delete(`/bibliotheque-personnelle/${id}`),
 };
+
+export const messageAPI = {
+  getConversations() {
+    return api.get('/messages/conversations');
+  },
+
+  getMessagesForEmprunt(empruntId: number) {
+    return api.get(`/messages/emprunt/${empruntId}`);
+  },
+
+  sendMessage(data: { id_emprunt: number; message_text: string }) {
+    return api.post('/messages/', data);
+  }
+};
+
 
 export default api;

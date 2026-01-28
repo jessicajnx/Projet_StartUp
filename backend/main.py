@@ -9,8 +9,13 @@ from routes import (
     ai_routes,
     bibliotheque_routes,
     cities,
+    message_routes
+
 )
 from routes.cities import router as cities_router
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI(title="Livre2main API", version="1.0.0")
 
@@ -29,6 +34,8 @@ app.include_router(emprunt_routes.router)
 app.include_router(ai_routes.router)
 app.include_router(bibliotheque_routes.router)
 app.include_router(cities.router)
+app.include_router(message_routes.router)
+
 
 @app.on_event("startup")
 def on_startup():

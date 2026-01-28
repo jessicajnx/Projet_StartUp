@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { userAPI, empruntAPI } from '@/lib/api';
+import { userAPI, messageAPI } from '@/lib/api';
 
 interface Conversation {
   id: number;
@@ -26,7 +26,7 @@ interface Message {
   };
 }
 
-export default function MessagériePage() {
+export default function MessageriePage() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -34,8 +34,10 @@ export default function MessagériePage() {
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [emprunts, setEmprunts] = useState<any[]>([]);
 
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  /** Vérifie le token et charge les données */
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -48,88 +50,125 @@ export default function MessagériePage() {
 
   const loadData = async () => {
     try {
+      // Récupérer l'utilisateur connecté
       const userResponse = await userAPI.getMe();
       setCurrentUser(userResponse.data);
-      
-      // Charger les emprunts pour créer des conversations
-      const empruntsResponse = await empruntAPI.getByUser(userResponse.data.id);
-      setEmprunts(empruntsResponse.data);
-      
-      // Créer des conversations fictives basées sur les emprunts
-      const mockConversations: Conversation[] = empruntsResponse.data.map((emprunt: any, index: number) => ({
-        id: emprunt.id,
-        userName: emprunt.id_user1 === userResponse.data.id ? `Utilisateur ${emprunt.id_user2}` : `Utilisateur ${emprunt.id_user1}`,
-        lastMessage: 'Bonjour, concernant l\'échange de livre...',
-        timestamp: new Date(emprunt.datetime).toLocaleDateString(),
-        unread: false,
-        bookTitle: 'Livre échangé',
+
+      // Récupérer les conversations
+      const convResponse = await messageAPI.getConversations();
+      const mappedConversations: Conversation[] = convResponse.data.map((conv: any) => ({
+        id: conv.id_emprunt,
+        userName: `${conv.other_user_name} ${conv.other_user_surname}`,
+        lastMessage: conv.last_message ?? 'Aucun message',
+        timestamp: conv.last_message_time
+          ? new Date(conv.last_message_time).toLocaleDateString('fr-FR')
+          : '',
+        unread: conv.unread_count > 0,
+        bookTitle: conv.livre_nom,
       }));
-      
-      setConversations(mockConversations);
+
+      setConversations(mappedConversations);
     } catch (error) {
-      console.error('Erreur lors du chargement des données', error);
+      console.error('Erreur chargement conversations', error);
     }
   };
 
-  const handleSelectConversation = (convId: number) => {
+  /** Sélection d’une conversation et chargement des messages */
+  const handleSelectConversation = async (convId: number) => {
+    if (!currentUser) return;
     setSelectedConversation(convId);
-    // Messages fictifs pour la démonstration
-    setMessages([
-      {
-        id: 1,
-        text: 'Bonjour ! Je suis intéressé par votre livre.',
-        sender: 'other',
-        timestamp: '10:30',
-      },
-      {
-        id: 2,
-        text: 'Bonjour ! Oui, il est toujours disponible.',
-        sender: 'me',
-        timestamp: '10:32',
-      },
-      {
-        id: 3,
-        text: 'Super ! On pourrait se rencontrer cette semaine ?',
-        sender: 'other',
-        timestamp: '10:35',
-      },
-    ]);
+
+    try {
+      // ⚡ Appel vers la bonne route FastAPI
+      const response = await messageAPI.getMessagesForEmprunt(convId);
+
+      const mappedMessages: Message[] = response.data
+        .sort((a: any, b: any) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime())
+        .map((msg: any) => ({
+          id: msg.id,
+          text: msg.message_text,
+          sender: msg.id_sender === currentUser.id ? 'me' : 'other',
+          timestamp: new Date(msg.datetime).toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        }));
+
+      setMessages(mappedMessages);
+
+      // Mettre à jour les conversations pour enlever le badge "non lu"
+      setConversations(prev =>
+        prev.map(conv =>
+          conv.id === convId ? { ...conv, unread: false } : conv
+        )
+      );
+    } catch (error) {
+      console.error('Erreur chargement messages', error);
+      setMessages([]);
+    }
   };
 
-  const handleSendMessage = () => {
+  /** Envoi d’un message */
+  const handleSendMessage = async () => {
     if (!newMessage.trim() || selectedConversation === null) return;
-    
-    const message: Message = {
-      id: messages.length + 1,
-      text: newMessage,
-      sender: 'me',
-      timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-    };
-    
-    setMessages([...messages, message]);
-    setNewMessage('');
+
+    try {
+      const response = await messageAPI.sendMessage({
+        id_emprunt: selectedConversation,
+        message_text: newMessage.trim(),
+      });
+
+      const msg = response.data;
+      const newMsg: Message = {
+        id: msg.id,
+        text: msg.message_text,
+        sender: 'me',
+        timestamp: new Date(msg.datetime).toLocaleTimeString('fr-FR', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      };
+
+      setMessages(prev => [...prev, newMsg]);
+      setNewMessage('');
+
+      // Mettre à jour le dernier message dans la liste des conversations
+      setConversations(prev =>
+        prev.map(conv =>
+          conv.id === selectedConversation
+            ? { ...conv, lastMessage: msg.message_text, timestamp: newMsg.timestamp }
+            : conv
+        )
+      );
+    } catch (error) {
+      console.error('Erreur envoi message', error);
+      alert("Erreur lors de l'envoi du message");
+    }
   };
 
-  if (!isAuthenticated) {
+  /** Scroll automatique vers le bas */
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  if (!isAuthenticated || !currentUser) {
     return <div>Chargement...</div>;
   }
 
   return (
     <div style={styles.container}>
       <Header />
-      
       <main style={styles.main}>
         <div style={styles.content}>
           <h1 style={styles.title}>Messagerie</h1>
-          
           <div style={styles.messagerieContainer}>
+            
             {/* Liste des conversations */}
             <div style={styles.conversationsList}>
               <div style={styles.conversationsHeader}>
                 <h2>Conversations</h2>
                 <span style={styles.badge}>{conversations.length}</span>
               </div>
-              
               {conversations.length === 0 ? (
                 <div style={styles.emptyState}>
                   <p>Aucune conversation</p>
@@ -142,21 +181,17 @@ export default function MessagériePage() {
                       key={conv.id}
                       style={{
                         ...styles.conversationItem,
-                        ...(selectedConversation === conv.id ? styles.conversationItemActive : {})
+                        ...(selectedConversation === conv.id ? styles.conversationItemActive : {}),
                       }}
                       onClick={() => handleSelectConversation(conv.id)}
                     >
-                      <div style={styles.conversationAvatar}>
-                        {conv.userName.charAt(0)}
-                      </div>
+                      <div style={styles.conversationAvatar}>{conv.userName.charAt(0)}</div>
                       <div style={styles.conversationInfo}>
                         <div style={styles.conversationName}>
                           {conv.userName}
                           {conv.unread && <span style={styles.unreadDot}></span>}
                         </div>
-                        {conv.bookTitle && (
-                          <div style={styles.conversationBook}> {conv.bookTitle}</div>
-                        )}
+                        {conv.bookTitle && <div style={styles.conversationBook}>{conv.bookTitle}</div>}
                         <div style={styles.conversationLastMessage}>{conv.lastMessage}</div>
                       </div>
                       <div style={styles.conversationTime}>{conv.timestamp}</div>
@@ -165,12 +200,11 @@ export default function MessagériePage() {
                 </div>
               )}
             </div>
-            
+
             {/* Zone de messages */}
             <div style={styles.messagesArea}>
               {selectedConversation === null ? (
                 <div style={styles.noConversationSelected}>
-                  <div style={styles.noConvIcon}></div>
                   <h3>Sélectionnez une conversation</h3>
                   <p>Choisissez une conversation dans la liste pour commencer à discuter</p>
                 </div>
@@ -185,24 +219,23 @@ export default function MessagériePage() {
                         <div style={styles.headerName}>
                           {conversations.find(c => c.id === selectedConversation)?.userName}
                         </div>
-                        <div style={styles.headerStatus}>En ligne</div>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div style={styles.messagesList}>
                     {messages.map(msg => (
                       <div
                         key={msg.id}
                         style={{
                           ...styles.messageItem,
-                          ...(msg.sender === 'me' ? styles.messageMe : styles.messageOther)
+                          ...(msg.sender === 'me' ? styles.messageMe : styles.messageOther),
                         }}
                       >
                         <div
                           style={{
                             ...styles.messageBubble,
-                            ...(msg.sender === 'me' ? styles.messageBubbleMe : styles.messageBubbleOther)
+                            ...(msg.sender === 'me' ? styles.messageBubbleMe : styles.messageBubbleOther),
                           }}
                         >
                           {msg.bookInfo && (
@@ -215,14 +248,15 @@ export default function MessagériePage() {
                         </div>
                       </div>
                     ))}
+                    <div ref={messagesEndRef} />
                   </div>
-                  
+
                   <div style={styles.messageInput}>
                     <input
                       type="text"
                       value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                      onChange={e => setNewMessage(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
                       placeholder="Écrivez votre message..."
                       style={styles.input}
                     />
@@ -236,7 +270,6 @@ export default function MessagériePage() {
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );
@@ -252,6 +285,7 @@ const styles = {
     flex: 1,
     backgroundColor: '#F5E6D3',
     padding: '2rem',
+    overflow: 'hidden',
   } as React.CSSProperties,
   content: {
     maxWidth: '1400px',
@@ -272,6 +306,7 @@ const styles = {
     borderRadius: '8px',
     overflow: 'hidden',
     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    minHeight: 0,
   } as React.CSSProperties,
   conversationsList: {
     borderRight: '1px solid #D4B59E',
@@ -366,6 +401,8 @@ const styles = {
   messagesArea: {
     display: 'flex',
     flexDirection: 'column' as const,
+    height: '100%',
+    minHeight: 0,
   } as React.CSSProperties,
   messagesHeader: {
     padding: '1.5rem',
@@ -399,6 +436,7 @@ const styles = {
   } as React.CSSProperties,
   messagesList: {
     flex: 1,
+    minHeight: 0,
     overflowY: 'auto' as const,
     padding: '1.5rem',
     display: 'flex',

@@ -28,6 +28,34 @@ const formatError = (err: any): string => {
   return String(detail);
 };
 
+const passwordRules = [
+  {
+    test: (v: string) => v.length >= 8,
+    message: "Au moins 8 caractères",
+  },
+  {
+    test: (v: string) => /[A-Z]/.test(v),
+    message: "Au moins une majuscule",
+  },
+  {
+    test: (v: string) => /[a-z]/.test(v),
+    message: "Au moins une minuscule",
+  },
+  {
+    test: (v: string) => /\d/.test(v),
+    message: "Au moins un chiffre",
+  },
+  {
+    test: (v: string) => /[^\w\s]/.test(v),
+    message: "Au moins un caractère spécial",
+  },
+];
+
+const getPasswordErrors = (password: string): string[] =>
+  passwordRules
+    .filter(rule => !rule.test(password))
+    .map(rule => rule.message);
+
 export default function Register() {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -41,9 +69,15 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+
 
   const handleChange = (key: string, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm(prev => ({ ...prev, [key]: value }));
+
+    if (key === "mdp") {
+      setPasswordErrors(getPasswordErrors(value));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,11 +96,14 @@ export default function Register() {
       setError("Email invalide (format requis: nom@domaine.ext)");
       return;
     }
-    if (!passwordRegex.test(form.mdp)) {
+    const pwdErrors = getPasswordErrors(form.mdp);
+    if (pwdErrors.length > 0) {
       setLoading(false);
-      setError("Mot de passe: 8+ caractères, 1 majuscule, 1 minuscule, 1 chiffre, 1 spécial");
+      setPasswordErrors(pwdErrors);
       return;
     }
+    setPasswordErrors([]);
+
     try {
       await authAPI.register({
         ...form,
@@ -152,6 +189,27 @@ export default function Register() {
                 required
               />
             </label>
+            {passwordErrors.length > 0 && (
+              <ul
+                style={{
+                  gridColumn: "1 / -1",
+                  marginTop: "0.5rem",
+                  paddingLeft: "1.2rem",
+                  color: "#c0392b",
+                  fontSize: "0.9rem",
+                }}
+              >
+                {passwordRules.map(rule => {
+                  const ok = !passwordErrors.includes(rule.message);
+                  return (
+                    <li key={rule.message} style={{ color: ok ? "#27ae60" : "#c0392b" }}>
+                      {ok ? "✅" : "❌"} {rule.message}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
             {error && <p className="text-error" style={{ gridColumn: "1 / -1" }}>{error}</p>}
             {success && <p className="text-success" style={{ gridColumn: "1 / -1" }}>{success}</p>}
             <div className="actions" style={{ gridColumn: "1 / -1" }}>
