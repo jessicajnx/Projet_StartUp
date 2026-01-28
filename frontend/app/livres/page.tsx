@@ -166,7 +166,6 @@ export default function Livres() {
 
   const handleAddToLibrary = async (book: Book) => {
     if (addedIds.has(book.id)) {
-      alert('Ce livre est déjà dans votre bibliothèque');
       return;
     }
 
@@ -183,10 +182,8 @@ export default function Livres() {
       });
       
       setAddedIds(prev => new Set(prev).add(book.id));
-      alert('Livre ajouté à votre bibliothèque !');
     } catch (err) {
       console.error('Erreur lors de l\'ajout', err);
-      alert('Erreur lors de l\'ajout du livre');
     } finally {
       setSavingId(null);
     }
