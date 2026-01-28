@@ -205,7 +205,6 @@ export default function MessageriePage() {
             <div style={styles.messagesArea}>
               {selectedConversation === null ? (
                 <div style={styles.noConversationSelected}>
-                  <div style={styles.noConvIcon}>💬</div>
                   <h3>Sélectionnez une conversation</h3>
                   <p>Choisissez une conversation dans la liste pour commencer à discuter</p>
                 </div>

@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
 from models import Livre, User
-from schemas import Livre as LivreSchema, LivreCreate, LivreUpdate
+from schemas import Livre as LivreSchema, LivreCreate, LivreUpdate, LivresPaginated
 from routes.user_routes import get_current_user
+import math
 
 router = APIRouter(prefix="/livres", tags=["Livres"])
 
@@ -16,10 +17,24 @@ def create_livre(livre: LivreCreate, db: Session = Depends(get_db), current_user
     db.refresh(db_livre)
     return db_livre
 
-@router.get("/", response_model=List[LivreSchema])
-def get_all_livres(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    livres = db.query(Livre).offset(skip).limit(limit).all()
-    return livres
+@router.get("/", response_model=LivresPaginated)
+def get_all_livres(
+    page: int = Query(1, ge=1, description="Numéro de page (commence à 1)"),
+    page_size: int = Query(10, ge=1, le=100, description="Nombre d'éléments par page"),
+    db: Session = Depends(get_db)
+):
+    total = db.query(Livre).count()
+    skip = (page - 1) * page_size
+    livres = db.query(Livre).offset(skip).limit(page_size).all()
+    total_pages = math.ceil(total / page_size) if total > 0 else 1
+
+    return LivresPaginated(
+        items=livres,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages
+    )
 
 @router.get("/{livre_id}", response_model=LivreSchema)
 def get_livre(livre_id: int, db: Session = Depends(get_db)):

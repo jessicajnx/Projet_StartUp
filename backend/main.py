@@ -10,6 +10,10 @@ from routes import (
     bibliotheque_routes,
     message_routes
 )
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement
+load_dotenv()
 
 app = FastAPI(title="Livre2main API", version="1.0.0")
 

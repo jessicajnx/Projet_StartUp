@@ -1,28 +1,31 @@
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 import base64
 import requests
 import os
 from io import BytesIO
 from PIL import Image
 from database import get_db
-from models import Livre, User
+from models import Livre, User, BibliothequePersonnelle
 from schemas import Livre as LivreSchema
 from routes.user_routes import get_current_user
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
 
-# Configuration pour Qwen (Alibaba Cloud DashScope)
-QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")
-QWEN_API_URL = os.getenv("QWEN_API_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+# Configuration pour MiniCPM-V via Ollama local
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
+VISION_MODEL = os.getenv("VISION_MODEL", "minicpm-v")
 
 def analyze_book_image(image_data: bytes) -> dict:
     """
-    Analyse une image de livre avec Qwen Vision pour extraire les informations
+    Analyse une image de livre avec MiniCPM-V via Ollama pour extraire les informations
     """
+    import json
+    
     try:
+        
         # Convertir l'image en base64
         image = Image.open(BytesIO(image_data))
         
@@ -35,104 +38,116 @@ def analyze_book_image(image_data: bytes) -> dict:
         image.save(buffered, format="JPEG")
         img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
         
-        # Utiliser Qwen via API compatible OpenAI
-        headers = {
-            "Authorization": f"Bearer {QWEN_API_KEY}",
-            "Content-Type": "application/json"
-        }
+        print(f"\n=== Analyse d'image avec {VISION_MODEL} ===")
         
+        # Utiliser MiniCPM-V via Ollama local avec un prompt optimisé
         payload = {
-            "model": "qwen-vl-plus",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{img_base64}"
-                            }
-                        },
-                        {
-                            "type": "text",
-                            "text": """Analyse cette image de livre et extrais les informations suivantes au format JSON exact :
+            "model": VISION_MODEL,
+            "prompt": """Tu es un expert en reconnaissance optique de caractères (OCR). Analyse cette image avec la plus grande PRÉCISION.
+
+TÂCHE : Identifie chaque livre visible et extrais :
+1. Le TITRE EXACT - chaque mot, chaque article (le, la, l', un, une, etc.)
+2. L'AUTEUR COMPLET - prénom et nom exacts
+
+RÈGLES STRICTES :
+- Lis lettre par lettre, ne devine JAMAIS
+- Respecte TOUS les articles : "l'" reste "l'", "la" reste "la"
+- Respecte TOUTE la ponctuation et les majuscules
+- Si plusieurs livres : liste-les TOUS dans l'ordre
+- Vérifie deux fois chaque mot avant de répondre
+
+Format JSON obligatoire :
 {
-  "titre": "titre du livre",
-  "auteur": "nom de l'auteur",
-  "genre": "genre littéraire"
+  "livres": [
+    {"titre": "titre exact lettre par lettre", "auteur": "prénom nom exact"}
+  ]
 }
 
-Si tu ne peux pas identifier certaines informations, utilise null. Réponds UNIQUEMENT avec le JSON, rien d'autre."""
-                        }
-                    ]
-                }
-            ],
-            "max_tokens": 500,
-            "temperature": 0.1
+RÉPONDS UNIQUEMENT avec le JSON.""",
+            "images": [img_base64],
+            "stream": False,
+            "options": {
+                "temperature": 0.01,
+                "num_predict": 500,
+                "top_p": 0.8,
+                "top_k": 20,
+                "repeat_penalty": 1.1
+            }
         }
         
-        if QWEN_API_KEY and len(QWEN_API_KEY) > 10:
-            try:
-                response = requests.post(
-                    f"{QWEN_API_URL}/chat/completions",
-                    headers=headers,
-                    json=payload,
-                    timeout=30
-                )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    content = result.get("choices", [{}])[0].get("message", {}).get("content", "{}")
-                    
-                    # Parser le JSON de la réponse
-                    import json
-                    try:
-                        # Nettoyer la réponse pour extraire uniquement le JSON
-                        content = content.strip()
-                        if "```json" in content:
-                            content = content.split("```json")[1].split("```")[0].strip()
-                        elif "```" in content:
-                            content = content.split("```")[1].split("```")[0].strip()
-                        
-                        book_info = json.loads(content)
-                        return {
-                            "nom": book_info.get("titre", "Titre inconnu"),
-                            "auteur": book_info.get("auteur", "Auteur inconnu"),
-                            "genre": book_info.get("genre", "Non classifié")
-                        }
-                    except json.JSONDecodeError:
-                        # Fallback au mode simulation
-                        pass
-                else:
-                    # Erreur API - fallback au mode simulation
-                    print(f"Erreur API: {response.status_code} - Passage en mode simulation")
-            except Exception as api_error:
-                # Erreur réseau ou autre - fallback au mode simulation
-                print(f"Erreur connexion API: {api_error} - Passage en mode simulation")
+        # Appel à Ollama
+        print(f"Envoi de la requête à {OLLAMA_API_URL}/api/generate...")
+        response = requests.post(
+            f"{OLLAMA_API_URL}/api/generate",
+            json=payload,
+            timeout=120
+        )
         
-        import random
-        livres_simulation = [
-            {"nom": "Le Petit Prince", "auteur": "Antoine de Saint-Exupéry", "genre": "Conte philosophique"},
-            {"nom": "1984", "auteur": "George Orwell", "genre": "Science-fiction"},
-            {"nom": "Harry Potter à l'école des sorciers", "auteur": "J.K. Rowling", "genre": "Fantasy"},
-            {"nom": "L'Étranger", "auteur": "Albert Camus", "genre": "Roman philosophique"},
-            {"nom": "Les Misérables", "auteur": "Victor Hugo", "genre": "Roman historique"},
-        ]
-        livre = random.choice(livres_simulation)
-        return {
-            "nom": livre["nom"],
-            "auteur": livre["auteur"],
-            "genre": livre["genre"],
-            "note":  'Mode simulation'
-
-        }
+        print(f"Statut de la réponse: {response.status_code}")
         
+        if response.status_code == 200:
+            result = response.json()
+            content = result.get("response", "")
+            
+            print(f"Réponse brute du modèle:\n{content}\n")
+            
+            # Nettoyer la réponse pour extraire uniquement le JSON
+            content = content.strip()
+            
+            # Essayer de trouver le JSON dans la réponse
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+            elif "```" in content:
+                content = content.split("```")[1].split("```")[0].strip()
+            
+            # Trouver les accolades
+            start_idx = content.find('{')
+            end_idx = content.rfind('}') + 1
+            if start_idx != -1 and end_idx > start_idx:
+                content = content[start_idx:end_idx]
+            
+            print(f"JSON extrait: {content}")
+            
+            book_info = json.loads(content)
+            
+            # Support pour plusieurs livres
+            livres_detectes = book_info.get("livres", [])
+            
+            if not livres_detectes:
+                # Fallback si l'ancien format est utilisé
+                if "titre" in book_info:
+                    livres_detectes = [{
+                        "titre": book_info.get("titre", "Titre inconnu"),
+                        "auteur": book_info.get("auteur", "Auteur inconnu")
+                    }]
+            
+            # Formater les résultats
+            result_data = {
+                "livres": [
+                    {
+                        "nom": livre.get("titre", "Titre inconnu"),
+                        "auteur": livre.get("auteur", "Auteur inconnu")
+                    }
+                    for livre in livres_detectes
+                ]
+            }
+            
+            print(f"✅ Analyse réussie: {len(result_data['livres'])} livre(s) détecté(s)")
+            print(f"Détails: {result_data}")
+            return result_data
+        else:
+            error_msg = f"Erreur Ollama: {response.status_code} - {response.text}"
+            print(f"❌ {error_msg}")
+            raise Exception(error_msg)
+            
     except Exception as e:
-        print(f"Erreur lors de l'analyse: {e}")
+        print(f"❌ Erreur lors de l'analyse: {e}")
+        # Retourner l'erreur au lieu du mode simulation
         return {
-            "nom": "Erreur détection",
-            "auteur": "Erreur détection",
-            "genre": "Non classifié",
+            "livres": [{
+                "nom": "Erreur d'analyse",
+                "auteur": "Erreur d'analyse"
+            }],
             "error": str(e)
         }
 
@@ -162,27 +177,45 @@ async def analyze_book(
     }
 
 
-@router.post("/add-detected-book", response_model=LivreSchema)
+@router.post("/add-detected-book")
 async def add_detected_book(
     nom: str,
     auteur: str,
-    genre: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Ajoute un livre détecté par IA à la bibliothèque de l'utilisateur
+    Ajoute un livre détecté par IA à la bibliothèque personnelle de l'utilisateur
     """
-    # Créer le livre
-    livre = Livre(nom=nom, auteur=auteur, genre=genre)
-    db.add(livre)
+    # Vérifier si le livre existe déjà dans la bibliothèque personnelle
+    existing_book = db.query(BibliothequePersonnelle).filter(
+        BibliothequePersonnelle.user_id == current_user.id,
+        BibliothequePersonnelle.title == nom
+    ).first()
+    
+    if existing_book:
+        raise HTTPException(status_code=400, detail="Ce livre est déjà dans votre bibliothèque")
+    
+    # Ajouter à la bibliothèque personnelle
+    new_book = BibliothequePersonnelle(
+        user_id=current_user.id,
+        title=nom,
+        authors=[auteur],
+        source="ai_detection",
+        source_id=None
+    )
+    
+    db.add(new_book)
     db.commit()
-    db.refresh(livre)
+    db.refresh(new_book)
     
-    # Assigner le livre à l'utilisateur
-    user = db.query(User).filter(User.id == current_user.id).first()
-    if user:
-        user.livres.append(livre)
-        db.commit()
-    
-    return livre
+    return {
+        "success": True,
+        "message": "Livre ajouté à votre bibliothèque",
+        "book": {
+            "id": new_book.id,
+            "title": new_book.title,
+            "authors": new_book.authors,
+            "source": new_book.source
+        }
+    }

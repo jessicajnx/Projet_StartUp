@@ -24,6 +24,13 @@ class Livre(LivreBase):
     class Config:
         from_attributes = True
 
+class LivresPaginated(BaseModel):
+    items: List[Livre]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
 class UserBase(BaseModel):
     name: str
     surname: str
@@ -122,6 +129,14 @@ class PersonalBook(PersonalBookBase):
 
     class Config:
         from_attributes = True
+
+
+class PersonalBooksPaginated(BaseModel):
+    items: List[PersonalBook]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
 
 class MessageBase(BaseModel):
     id_emprunt: int

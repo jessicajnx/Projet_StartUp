@@ -1,0 +1,80 @@
+/* Loading States */
+.loading {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+  color: #5D4E37;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;
+  gap: 1.5rem;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #e8d5c4;
+  border-top: 5px solid var(--color-primary-light);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loadingText {
+  color: var(--color-text);
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+/* Error States */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 2rem;
+  background-color: var(--color-error-bg);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-error-border);
+}
+
+.errorText {
+  color: var(--color-error);
+  font-size: 1.1rem;
+  text-align: center;
+  margin: 0;
+}
+
+/* Empty States */
+.empty {
+  background-color: white;
+  padding: 3rem;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+}
+
+.emptyText {
+  color: var(--color-text-light);
+  font-size: 1.2rem;
+  text-align: center;
+  margin: 0;
+}
+
+.emptyTitle {
+  color: #5D4E37;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
