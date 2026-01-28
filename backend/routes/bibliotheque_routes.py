@@ -28,7 +28,7 @@ def add_book_to_personal_library(
 @router.get("/me", response_model=PersonalBooksPaginated)
 def list_my_personal_library(
     page: int = Query(1, ge=1, description="Numéro de page (commence à 1)"),
-    page_size: int = Query(10, ge=1, le=100, description="Nombre d'éléments par page"),
+    page_size: int = Query(10, ge=1, le=10000, description="Nombre d'éléments par page"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
