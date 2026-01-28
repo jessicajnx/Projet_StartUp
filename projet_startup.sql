@@ -45,16 +45,6 @@ CREATE TABLE IF NOT EXISTS `bibliothequepersonnelle` (
   KEY `idx_biblio_user` (`UserID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Déchargement des données de la table `bibliothequepersonnelle`
---
-
-INSERT INTO `bibliothequepersonnelle` (`ID`, `UserID`, `Title`, `Authors`, `CoverUrl`, `InfoLink`, `Description`, `Source`, `SourceID`, `CreatedAt`) VALUES
-(6, 1, 'Les Hauts de Hurle-Vent', '[\"Emily Brontë\"]', 'http://books.google.com/books/content?id=tFE5EAAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api', 'https://play.google.com/store/books/details?id=tFE5EAAAQBAJ&source=gbs_api', 'Lorsque Mr Earnshaw ramène d’un voyage un enfant abandonné, Heathcliff, les réactions de ses enfants évoquent les orages qui s’abattent sur le domaine des Hauts du Hurlevent. Le fils Hindley n’accepte pas cet enfant sombre et lui fait vivre un enfer. La fille, Catherine, se lie très vite à lui, d’un amour insaisissable et fusionnel. Tous trois grandissent, dans cet amas de sentiments aussi forts qu\'opposés. Heathcliff devient un homme sans scrupule, qui jure de se venger des deux hommes ayant empêché le déploiement de son amour : Hindley, le frère ennemi, et Edgar, le mari de Catherine. La destruction de ces deux familles et de leurs descendances constitue alors son seul objectif. Dans les paysages sauvages et immuables des landes du Yorkshire, les déchirements sont nombreux, et cohabitent dans une passion extrême et des tourments destructeurs...', 'google_books', 'tFE5EAAAQBAJ', '2026-01-27 15:38:37'),
-(8, 1, 'Alice au pays des merveilles', '[\"Lewis Carroll\"]', 'http://books.google.com/books/content?id=LoqOAQAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api', 'https://play.google.com/store/books/details?id=LoqOAQAAQBAJ&source=gbs_api', 'Un grand classique adapté pour les enfants et magnifiquement illustré. \"Nous sommes tous fous ici. Je suis fou. Vous êtes folle. - Comment savez-vous que je suis folle ? demanda Alice. - Vous devez l\'être, répondit le Chat, ou vous ne seriez pas venue ici.\" Retrouvez les aventures d\'Alice dans ce chef-d\'œuvre de la littérature classique.', 'google_books', 'LoqOAQAAQBAJ', '2026-01-28 08:35:22'),
-(9, 1, 'Frankenstein', '[\"Mary Shelley\"]', 'http://books.google.com/books/content?id=N9pcDwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api', 'https://play.google.com/store/books/details?id=N9pcDwAAQBAJ&source=gbs_api', '16 juin 1816. L\'orage gronde. Dans une ville cachée au milieu des arbres, sur les bords riants du lac de Genève, une petite société s\'ennuie. Il y a deux poètes, Byron et Shelley, leurs compagnes, Claire et Mary, un médecin, Polidori. On se raconte d\'horribles histoires, selon la mode du temps. On décide même d\'en écrire. Dans la nuit, la jeune Mary – elle n\'a pas encore 19 ans – ne peut dormir : elle rêve d\'un hideux fantasme d\'homme. Quelques jours plus tard naissent Victor Frankenstein et sa créature. Récit d\'une inquiétante nouveauté, vite porté à la scène, très souvent ensuite à l\'écran. Devenu si mythique que, dans l\'esprit du public qui a oublié Mary Shelley, le créateur et sa créature se sont confondus. Traduit de l\'anglais par George Cuvelier et Eugène Rocartel @ Disponible chez 12-21 L\'ÉDITEUR NUMÉRIQUE', 'google_books', 'N9pcDwAAQBAJ', '2026-01-28 08:35:33'),
-(10, 1, 'Mansfield Park Illustrated', '[\"Jane Austen\"]', 'http://books.google.com/books/content?id=U2LczQEACAAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api', 'http://books.google.fr/books?id=U2LczQEACAAJ&dq=subject:fiction&hl=&as_pt=BOOKS&source=gbs_api', '\"Mansfield Park is the third published novel by Jane Austen, first published in 1814 by Thomas Egerton. A second edition was published in 1816 by John Murray, still within Austen\'s lifetime. The novel did not receive any public reviews until 1821.The novel tells the story of Fanny Price, starting when her overburdened family sends her at age ten to live in the household of her wealthy aunt and uncle and following her development into early adulthood. From early on critical interpretation has been diverse, differing particularly over the character of the heroine, Austen\'s views about theatrical performance and the centrality or otherwise of ordination and religion, and on the question of slavery. Some of these problems have been highlighted in the several later adaptations of the story for stage and screen.\"', 'google_books', 'U2LczQEACAAJ', '2026-01-28 08:54:39');
-
 -- --------------------------------------------------------
 
 --
@@ -114,12 +104,6 @@ CREATE TABLE IF NOT EXISTS `user` (
 --
 -- Déchargement des données de la table `user`
 --
-
-INSERT INTO `user` (`ID`, `Name`, `Surname`, `Role`, `Villes`, `MDP`, `Email`, `Age`, `Signalement`, `liste_livres`) VALUES
-(1, 'chess', 'jaunaux', 'Pauvre', 'Paris', '$2b$12$lzNPSKOTFgxFntpeVjPer.kFtIYmxDLW0CL2retIilUHutEv5i35K', 'jjaunaux@gmail.com', 22, 0, NULL),
-(3, 'Admin', 'User', 'Admin', 'Paris', '$2b$12$fC7MERadu4Lsgx8rNa9VpOHH33vkPv7bnIlAajMOt4.M8wlzZyZkW', 'admin@livre2main.fr', 30, 0, NULL),
-(4, 'giulian', 'fontaine', 'Pauvre', 'Thiais', '$2b$12$bIcno/AUyxVf4Xp0lwCLVud58DimrSIu4x5DUf1OL09HOBLuqesH2', 'giugiu@free.fr', 12, 0, NULL),
-(5, 'giulian', 'lol', 'Pauvre', 'Thiais', '$2b$12$q1B8vQ9CyYObgaQ5KxeU1ONwCglHYv8YpCeV8yP9w4sdogfr9zh2m', 'giugiu1@free.fr', 12, 0, NULL);
 
 DROP TABLE IF EXISTS `message`;
 CREATE TABLE IF NOT EXISTS `message` (
