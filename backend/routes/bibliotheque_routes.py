@@ -2,12 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List
 import math
+import logging
 
 from database import get_db
 from models import BibliothequePersonnelle, User
 from schemas import PersonalBook, PersonalBookBase, PersonalBookCreate, PersonalBooksPaginated
 from routes.user_routes import get_current_user
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/bibliotheque-personnelle", tags=["Bibliotheque personnelle"])
 
 
@@ -17,11 +19,13 @@ def add_book_to_personal_library(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    logger.info(f"Ajout du livre pour l'utilisateur {current_user.id}: {book.dict()}")
     payload = PersonalBookCreate(**book.dict(), user_id=current_user.id)
     db_book = BibliothequePersonnelle(**payload.dict())
     db.add(db_book)
     db.commit()
     db.refresh(db_book)
+    logger.info(f"Livre ajouté avec l'ID: {db_book.id}")
     return db_book
 
 

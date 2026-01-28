@@ -16,7 +16,7 @@
   margin: 0 auto;
   background-color: white;
   border-radius: var(--radius-lg);
-  padding: 2.5rem;
+  padding: 1.5rem;
   box-shadow: var(--shadow-lg);
 }
 
@@ -26,7 +26,7 @@
 }
 
 .title {
-  font-size: 2.5rem;
+  font-size: 2rem;
   color: var(--color-text);
   margin-bottom: 0.5rem;
   font-weight: 700;
