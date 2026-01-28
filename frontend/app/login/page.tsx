@@ -59,7 +59,21 @@ export default function Login() {
         }
       }
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Connexion impossible");
+      const errorDetail = err?.response?.data?.detail;
+      let errorMsg = "Connexion impossible";
+      
+      if (errorDetail) {
+        if (typeof errorDetail === 'string') {
+          errorMsg = errorDetail;
+        } else if (Array.isArray(errorDetail)) {
+          // Erreur de validation Pydantic (array d'objets)
+          errorMsg = errorDetail.map((e: any) => e.msg || JSON.stringify(e)).join(', ');
+        } else {
+          errorMsg = JSON.stringify(errorDetail);
+        }
+      }
+      
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -96,7 +110,7 @@ export default function Login() {
                 required
               />
             </label>
-            {error && <p className="text-error" style={{ gridColumn: "1 / -1" }}>{error}</p>}
+            {error && <p className="text-error" style={{ gridColumn: "1 / -1" }}>{String(error)}</p>}
             <div className="actions" style={{ gridColumn: "1 / -1" }}>
               <button type="submit" disabled={loading} className="btn btn-primary">
                 {loading ? "Connexion..." : "Se connecter"}

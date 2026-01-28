@@ -210,8 +210,8 @@ export default function Register() {
               </ul>
             )}
 
-            {error && <p className="text-error" style={{ gridColumn: "1 / -1" }}>{error}</p>}
-            {success && <p className="text-success" style={{ gridColumn: "1 / -1" }}>{success}</p>}
+            {error && <p className="text-error" style={{ gridColumn: "1 / -1" }}>{String(error)}</p>}
+            {success && <p className="text-success" style={{ gridColumn: "1 / -1" }}>{String(success)}</p>}
             <div className="actions" style={{ gridColumn: "1 / -1" }}>
               <button
                 type="submit"
