@@ -11,6 +11,8 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
+-- Désactiver temporairement les contraintes de clés étrangères
+SET FOREIGN_KEY_CHECKS = 0;
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -160,3 +162,6 @@ COMMIT;
 ALTER TABLE `message`
   ADD CONSTRAINT `fk_message_emprunt` FOREIGN KEY (`IDEmprunt`) REFERENCES `emprunt` (`ID`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_message_sender` FOREIGN KEY (`IDSender`) REFERENCES `user` (`ID`) ON DELETE CASCADE;
+
+-- Réactiver les contraintes de clés étrangères
+SET FOREIGN_KEY_CHECKS = 1;
