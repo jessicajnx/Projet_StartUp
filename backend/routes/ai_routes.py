@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 import base64
 import requests
 import os
 from io import BytesIO
 from PIL import Image
 from database import get_db
-from models import Livre, User
+from models import Livre, User, BibliothequePersonnelle
 from schemas import Livre as LivreSchema
 from routes.user_routes import get_current_user
 
@@ -43,24 +43,35 @@ def analyze_book_image(image_data: bytes) -> dict:
         # Utiliser LLaVA via Ollama local avec un prompt optimisé
         payload = {
             "model": LLAVA_MODEL,
-            "prompt": """Regarde attentivement cette image de couverture de livre. Je veux que tu identifies :
-1. Le titre exact du livre (tel qu'écrit sur la couverture)
-2. Le nom de l'auteur (tel qu'écrit sur la couverture)
-3. Le genre littéraire du livre
+            "prompt": """Tu es un expert en reconnaissance optique de caractères (OCR). Analyse cette image avec la plus grande PRÉCISION.
 
-Réponds UNIQUEMENT avec un objet JSON dans ce format exact :
+TÂCHE : Identifie chaque livre visible et extrais :
+1. Le TITRE EXACT - chaque mot, chaque article (le, la, l', un, une, etc.)
+2. L'AUTEUR COMPLET - prénom et nom exacts
+
+RÈGLES STRICTES :
+- Lis lettre par lettre, ne devine JAMAIS
+- Respecte TOUS les articles : "l'" reste "l'", "la" reste "la"
+- Respecte TOUTE la ponctuation et les majuscules
+- Si plusieurs livres : liste-les TOUS dans l'ordre
+- Vérifie deux fois chaque mot avant de répondre
+
+Format JSON obligatoire :
 {
-  "titre": "le titre exact du livre",
-  "auteur": "le nom exact de l'auteur",
-  "genre": "le genre"
+  "livres": [
+    {"titre": "titre exact lettre par lettre", "auteur": "prénom nom exact"}
+  ]
 }
 
-Ne réponds qu'avec le JSON, rien d'autre.""",
+RÉPONDS UNIQUEMENT avec le JSON.""",
             "images": [img_base64],
             "stream": False,
             "options": {
-                "temperature": 0.1,
-                "num_predict": 200
+                "temperature": 0.01,
+                "num_predict": 500,
+                "top_p": 0.8,
+                "top_k": 20,
+                "repeat_penalty": 1.1
             }
         }
         
@@ -98,12 +109,31 @@ Ne réponds qu'avec le JSON, rien d'autre.""",
             print(f"JSON extrait: {content}")
             
             book_info = json.loads(content)
+            
+            # Support pour plusieurs livres
+            livres_detectes = book_info.get("livres", [])
+            
+            if not livres_detectes:
+                # Fallback si l'ancien format est utilisé
+                if "titre" in book_info:
+                    livres_detectes = [{
+                        "titre": book_info.get("titre", "Titre inconnu"),
+                        "auteur": book_info.get("auteur", "Auteur inconnu")
+                    }]
+            
+            # Formater les résultats
             result_data = {
-                "nom": book_info.get("titre", "Titre inconnu"),
-                "auteur": book_info.get("auteur", "Auteur inconnu"),
-                "genre": book_info.get("genre", "Non classifié")
+                "livres": [
+                    {
+                        "nom": livre.get("titre", "Titre inconnu"),
+                        "auteur": livre.get("auteur", "Auteur inconnu")
+                    }
+                    for livre in livres_detectes
+                ]
             }
-            print(f"✅ Analyse réussie: {result_data}")
+            
+            print(f"✅ Analyse réussie: {len(result_data['livres'])} livre(s) détecté(s)")
+            print(f"Détails: {result_data}")
             return result_data
         else:
             error_msg = f"Erreur Ollama: {response.status_code} - {response.text}"
@@ -114,9 +144,10 @@ Ne réponds qu'avec le JSON, rien d'autre.""",
         print(f"❌ Erreur lors de l'analyse: {e}")
         # Retourner l'erreur au lieu du mode simulation
         return {
-            "nom": "Erreur d'analyse",
-            "auteur": "Erreur d'analyse",
-            "genre": "Non classifié",
+            "livres": [{
+                "nom": "Erreur d'analyse",
+                "auteur": "Erreur d'analyse"
+            }],
             "error": str(e)
         }
 
@@ -146,27 +177,45 @@ async def analyze_book(
     }
 
 
-@router.post("/add-detected-book", response_model=LivreSchema)
+@router.post("/add-detected-book")
 async def add_detected_book(
     nom: str,
     auteur: str,
-    genre: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Ajoute un livre détecté par IA à la bibliothèque de l'utilisateur
+    Ajoute un livre détecté par IA à la bibliothèque personnelle de l'utilisateur
     """
-    # Créer le livre
-    livre = Livre(nom=nom, auteur=auteur, genre=genre)
-    db.add(livre)
+    # Vérifier si le livre existe déjà dans la bibliothèque personnelle
+    existing_book = db.query(BibliothequePersonnelle).filter(
+        BibliothequePersonnelle.user_id == current_user.id,
+        BibliothequePersonnelle.title == nom
+    ).first()
+    
+    if existing_book:
+        raise HTTPException(status_code=400, detail="Ce livre est déjà dans votre bibliothèque")
+    
+    # Ajouter à la bibliothèque personnelle
+    new_book = BibliothequePersonnelle(
+        user_id=current_user.id,
+        title=nom,
+        authors=[auteur],
+        source="ai_detection",
+        source_id=None
+    )
+    
+    db.add(new_book)
     db.commit()
-    db.refresh(livre)
+    db.refresh(new_book)
     
-    # Assigner le livre à l'utilisateur
-    user = db.query(User).filter(User.id == current_user.id).first()
-    if user:
-        user.livres.append(livre)
-        db.commit()
-    
-    return livre
+    return {
+        "success": True,
+        "message": "Livre ajouté à votre bibliothèque",
+        "book": {
+            "id": new_book.id,
+            "title": new_book.title,
+            "authors": new_book.authors,
+            "source": new_book.source
+        }
+    }
