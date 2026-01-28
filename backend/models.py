@@ -49,16 +49,6 @@ class Emprunt(Base):
     livre = relationship("Livre", back_populates="emprunts")
 
 
-class BlockedEmail(Base):
-    __tablename__ = "BlockedEmail"
-
-    id = Column("ID", Integer, primary_key=True, index=True)
-    # MySQL index length limit (utf8mb4): keep indexed email below 191 chars
-    email = Column("Email", String(191), unique=True, nullable=False, index=True)
-    reason = Column("Reason", String(255), nullable=True)
-    created_at = Column("CreatedAt", DateTime, default=datetime.utcnow, nullable=False)
-
-
 class BibliothequePersonnelle(Base):
     __tablename__ = "BibliothequePersonnelle"
 
