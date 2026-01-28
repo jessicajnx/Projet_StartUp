@@ -14,6 +14,11 @@ from routes.user_routes import get_current_user
 router = APIRouter(prefix="/ai", tags=["AI"])
 
 
+
+
+
+"""hello.py"""
+
 # Configuration pour MiniCPM-V via Ollama local
 OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
 VISION_MODEL = os.getenv("VISION_MODEL", "minicpm-v")
