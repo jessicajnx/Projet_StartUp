@@ -31,6 +31,80 @@ export default function RechercheLivre() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [popularBooks, setPopularBooks] = useState<Book[]>([]);
+  const [loadingPopular, setLoadingPopular] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMoreBooks, setHasMoreBooks] = useState(true);
+
+  // Charger les livres populaires au démarrage
+  useEffect(() => {
+    loadPopularBooks(0);
+  }, []);
+
+  const loadPopularBooks = async (page: number) => {
+    if (!GOOGLE_BOOKS_API_KEY) return;
+    
+    try {
+      if (page === 0) {
+        setLoadingPopular(true);
+      } else {
+        setLoadingMore(true);
+      }
+      
+      const startIndex = page * 40; // Google Books limite à 40 par requête
+      const params = new URLSearchParams();
+      params.set("q", "subject:fiction");
+      params.set("key", GOOGLE_BOOKS_API_KEY);
+      params.set("maxResults", "40");
+      params.set("startIndex", startIndex.toString());
+      params.set("printType", "books");
+      params.set("orderBy", "newest");
+      params.set("langRestrict", "fr");
+
+      const response = await fetch(`https://www.googleapis.com/books/v1/volumes?${params.toString()}`);
+      const data = await response.json();
+      
+      if (response.ok && data.items) {
+        const parsed: Book[] = data.items.map((item: any) => {
+          const info = item.volumeInfo || {};
+          return {
+            id: item.id,
+            title: info.title || "Titre indisponible",
+            authors: info.authors || [],
+            thumbnail: info.imageLinks?.thumbnail,
+            description: info.description,
+            infoLink: info.infoLink || info.previewLink,
+          };
+        });
+        
+        // Toujours remplacer les livres
+        setPopularBooks(parsed);
+        
+        // Vérifier s'il y a plus de livres (si on reçoit moins de 40, c'est probablement la fin)
+        setHasMoreBooks(parsed.length >= 40);
+        setCurrentPage(page);
+      } else {
+        // Si pas de réponse, on arrête
+        setHasMoreBooks(false);
+      }
+    } catch (err) {
+      console.error("Erreur lors du chargement des livres populaires", err);
+    } finally {
+      setLoadingPopular(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const handleLoadMore = () => {
+    loadPopularBooks(currentPage + 1);
+  };
+
+  const handleLoadPrevious = () => {
+    if (currentPage > 0) {
+      loadPopularBooks(currentPage - 1);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -217,6 +291,108 @@ export default function RechercheLivre() {
           </div>
           {saveMessage && <p style={styles.info}>{saveMessage}</p>}
         </section>
+
+        {/* Section Livres Populaires */}
+        {!hasTyped && (
+          <section style={styles.popularSection}>
+            <h2 style={styles.popularTitle}>Livres populaires</h2>
+            <p style={styles.popularSubtitle}>Découvrez une sélection de livres tendance</p>
+            
+            {loadingPopular ? (
+              <p style={styles.loadingText}>Chargement des livres populaires...</p>
+            ) : (
+              <div style={styles.grid}>
+                {popularBooks.map((book) => (
+                  <article key={book.id} style={styles.card}>
+                    <div style={styles.cardHeader}>
+                      <div style={styles.thumbWrapper}>
+                        {book.thumbnail ? (
+                          <img src={book.thumbnail} alt={book.title} style={styles.thumb} />
+                        ) : (
+                          <div style={styles.thumbPlaceholder}>📘</div>
+                        )}
+                      </div>
+                      <div style={styles.meta}>
+                        <p style={styles.cardKicker}>Google Books</p>
+                        <h3 style={styles.cardTitle}>{book.title}</h3>
+                        {book.authors.length > 0 && (
+                          <p style={styles.authors}>{book.authors.join(", ")}</p>
+                        )}
+                      </div>
+                    </div>
+                    {book.description && (
+                      <p style={styles.description}>{book.description}</p>
+                    )}
+                    <button
+                      type="button"
+                      style={styles.linkButton}
+                      onClick={() => handleAddToLibrary(book)}
+                      disabled={savingId === book.id || addedIds.has(book.id)}
+                    >
+                      {savingId === book.id ? "Ajout..." : addedIds.has(book.id) ? "Ajouté" : "Ajouter à ma bibliothèque"}
+                    </button>
+                  </article>
+                ))}
+              </div>
+            )}
+            
+            {!loadingPopular && (
+              <div style={styles.paginationContainer}>
+                <button
+                  type="button"
+                  onClick={handleLoadPrevious}
+                  disabled={currentPage === 0 || loadingMore}
+                  style={{
+                    ...styles.paginationButton,
+                    ...(currentPage === 0 || loadingMore ? styles.paginationButtonDisabled : {}),
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentPage > 0 && !loadingMore) {
+                      e.currentTarget.style.backgroundColor = '#764d32';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentPage > 0 && !loadingMore) {
+                      e.currentTarget.style.backgroundColor = '#8b5e3c';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }
+                  }}
+                >
+                  ← Précédent
+                </button>
+                
+                <p style={styles.pageInfo}>
+                  Page {currentPage + 1} • {popularBooks.length} livres
+                </p>
+                
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  style={{
+                    ...styles.paginationButton,
+                    ...(loadingMore ? styles.paginationButtonDisabled : {}),
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loadingMore) {
+                      e.currentTarget.style.backgroundColor = '#764d32';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loadingMore) {
+                      e.currentTarget.style.backgroundColor = '#8b5e3c';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }
+                  }}
+                >
+                  {loadingMore ? "Chargement..." : "Suivant →"}
+                </button>
+              </div>
+            )}
+          </section>
+        )}
       </main>
       <Footer />
     </div>
@@ -416,5 +592,58 @@ const styles: Record<string, CSSProperties> = {
     fontSize: "14px",
     marginTop: "12px",
     fontWeight: 600,
+  },
+  popularSection: {
+    marginTop: "48px",
+  },
+  popularTitle: {
+    fontSize: "28px",
+    fontWeight: 600,
+    color: "#2f241d",
+    marginBottom: "8px",
+    textAlign: "center",
+  },
+  popularSubtitle: {
+    fontSize: "15px",
+    color: "#5c4b3a",
+    marginBottom: "28px",
+    textAlign: "center",
+  },
+  loadingText: {
+    textAlign: "center",
+    color: "#5c4b3a",
+    fontSize: "15px",
+    padding: "20px",
+  },
+  paginationContainer: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: "20px",
+    marginTop: "32px",
+    flexWrap: "wrap",
+  },
+  paginationButton: {
+    backgroundColor: "#8b5e3c",
+    color: "white",
+    border: "none",
+    padding: "12px 24px",
+    fontSize: "15px",
+    fontWeight: 600,
+    borderRadius: "10px",
+    cursor: "pointer",
+    boxShadow: "0 10px 18px rgba(139,94,60,0.22)",
+    transition: "all 120ms ease",
+  },
+  paginationButtonDisabled: {
+    backgroundColor: "#d6c3a5",
+    cursor: "not-allowed",
+    opacity: 0.6,
+  },
+  pageInfo: {
+    fontSize: "15px",
+    color: "#2f241d",
+    fontWeight: 600,
+    margin: 0,
   },
 };
