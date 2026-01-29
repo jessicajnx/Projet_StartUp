@@ -104,6 +104,19 @@ CREATE TABLE IF NOT EXISTS `user` (
 -- Déchargement des données de la table `user`
 --
 
+INSERT INTO `user` (`Name`, `Surname`, `Role`, `Villes`, `MDP`, `Email`, `Age`, `Signalement`, `liste_livres`)
+VALUES (
+    'Admin',
+    'System',
+    'Admin',
+    'Paris',
+    '$2b$12$4Dz5zaIBLmgtQveI/aCkhez7BVj6WB7nFZ41VVJnVC0QOPoB1.uIm',
+    'admin@bookshare.com',
+    30,
+    0,
+    NULL
+);
+
 DROP TABLE IF EXISTS `message`;
 CREATE TABLE IF NOT EXISTS `message` (
   `ID` int NOT NULL AUTO_INCREMENT,
@@ -112,6 +125,7 @@ CREATE TABLE IF NOT EXISTS `message` (
   `MessageText` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `DateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `IsRead` tinyint(1) DEFAULT '0' COMMENT 'Statut de lecture du message',
+  `MessageMetadata` json DEFAULT NULL COMMENT 'Métadonnées JSON pour actions/propositions',
   PRIMARY KEY (`ID`),
   KEY `fk_message_emprunt` (`IDEmprunt`),
   KEY `fk_message_sender` (`IDSender`),

@@ -67,8 +67,17 @@ def get_all_users(db: Session = Depends(get_db), current_user: User = Depends(re
     users = db.query(User).all()
     return users
 
+@router.get("/profile/{user_id}", response_model=UserSchema)
+def get_user_profile(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Récupère les informations publiques d'un utilisateur par son ID"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    return user
+
 @router.get("/{user_id}", response_model=UserSchema)
 def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
+    """Route admin pour récupérer un utilisateur par son ID"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
@@ -79,16 +88,16 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-    
+
     update_data = user_update.dict(exclude_unset=True)
-    
+
     if "mdp" in update_data:
         from auth import get_password_hash
         update_data["mdp"] = get_password_hash(update_data["mdp"])
-    
+
     for key, value in update_data.items():
         setattr(user, key, value)
-    
+
     db.commit()
     db.refresh(user)
     return user

@@ -150,6 +150,7 @@ class Message(MessageBase):
     id_sender: int
     datetime: datetime
     is_read: int
+    message_metadata: Optional[dict] = None
 
     class Config:
         from_attributes = True

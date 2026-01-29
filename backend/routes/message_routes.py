@@ -2,15 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from database import get_db
-from models import Message, Emprunt, User
+from models import Message, Emprunt, User, Livre
 from schemas import (
-    Message as MessageSchema, 
-    MessageCreate, 
+    Message as MessageSchema,
+    MessageCreate,
     MessageWithSender,
     ConversationSummary
 )
 from .user_routes import get_current_user
 from sqlalchemy import or_, and_, desc
+from datetime import datetime
 
 router = APIRouter(prefix="/messages", tags=["Messages"])
 
@@ -124,6 +125,7 @@ def get_messages_for_emprunt(
             message_text=message.message_text,
             datetime=message.datetime,
             is_read=message.is_read,
+            message_metadata=message.message_metadata,
             sender_name=sender.name,
             sender_surname=sender.surname
         ))
@@ -200,7 +202,7 @@ def get_unread_count(
     current_user: User = Depends(get_current_user)
 ):
     """Récupère le nombre total de messages non lus pour l'utilisateur"""
-    
+
     # Récupérer tous les emprunts où l'utilisateur est impliqué
     emprunts = db.query(Emprunt).filter(
         or_(
@@ -208,9 +210,9 @@ def get_unread_count(
             Emprunt.id_user2 == current_user.id
         )
     ).all()
-    
+
     emprunt_ids = [e.id for e in emprunts]
-    
+
     # Compter les messages non lus
     unread_count = db.query(Message).filter(
         and_(
@@ -219,5 +221,127 @@ def get_unread_count(
             Message.is_read == 0
         )
     ).count()
-    
+
     return {"unread_count": unread_count}
+
+
+@router.post("/proposal/{message_id}/respond")
+def respond_to_proposal(
+    message_id: int,
+    response: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Répond à une proposition d'échange (accepter ou refuser)
+    response: "accept" ou "reject"
+    """
+    # Vérifier que la réponse est valide
+    if response not in ["accept", "reject"]:
+        raise HTTPException(status_code=400, detail="Réponse invalide. Utilisez 'accept' ou 'reject'")
+
+    # Récupérer le message de proposition
+    proposal_message = db.query(Message).filter(Message.id == message_id).first()
+
+    if not proposal_message:
+        raise HTTPException(status_code=404, detail="Message non trouvé")
+
+    # Vérifier que c'est bien une proposition
+    if not proposal_message.message_metadata or proposal_message.message_metadata.get("type") not in ["proposal", "book_proposal"]:
+        raise HTTPException(status_code=400, detail="Ce message n'est pas une proposition")
+
+    # Vérifier que l'utilisateur est le destinataire
+    emprunt = db.query(Emprunt).filter(Emprunt.id == proposal_message.id_emprunt).first()
+    if emprunt.id_user2 != current_user.id and emprunt.id_user1 != current_user.id:
+        raise HTTPException(status_code=403, detail="Vous n'êtes pas autorisé à répondre à cette proposition")
+
+    # Vérifier que la proposition n'a pas déjà été traitée
+    if proposal_message.message_metadata.get("status") != "pending":
+        raise HTTPException(status_code=400, detail="Cette proposition a déjà été traitée")
+
+    # Mettre à jour le statut de la proposition
+    metadata = proposal_message.message_metadata.copy()
+    metadata["status"] = "accepted" if response == "accept" else "rejected"
+    metadata["responder_id"] = current_user.id
+    metadata["response_time"] = datetime.utcnow().isoformat()
+    proposal_message.message_metadata = metadata
+
+    # Récupérer l'Assistant et le proposant
+    assistant = db.query(User).filter(User.email == "assistant@livre2main.com").first()
+    proposer_id = metadata["proposer_id"]
+    proposer = db.query(User).filter(User.id == proposer_id).first()
+
+    # Créer ou récupérer la conversation entre l'Assistant et le proposant
+    generic_book = db.query(Livre).filter(Livre.nom == "Proposition d'échange").first()
+
+    proposer_emprunt = db.query(Emprunt).filter(
+        (
+            (Emprunt.id_user1 == assistant.id) & (Emprunt.id_user2 == proposer_id)
+        ) | (
+            (Emprunt.id_user1 == proposer_id) & (Emprunt.id_user2 == assistant.id)
+        )
+    ).filter(Emprunt.id_livre == generic_book.id).first()
+
+    if not proposer_emprunt:
+        proposer_emprunt = Emprunt(
+            id_user1=assistant.id,
+            id_user2=proposer_id,
+            id_livre=generic_book.id,
+            datetime=datetime.utcnow()
+        )
+        db.add(proposer_emprunt)
+        db.flush()
+
+    # Envoyer un message à l'expéditeur
+    book_title = metadata.get("book_title")
+    is_book_proposal = metadata.get("type") == "book_proposal"
+
+    if response == "accept":
+        if is_book_proposal and book_title:
+            response_text = (
+                f"✅ {current_user.name} {current_user.surname} a accepté votre proposition d'échange pour le livre \"{book_title}\" ! "
+                f"Vous pouvez le contacter à l'adresse : {current_user.email}"
+            )
+        else:
+            response_text = (
+                f"✅ {current_user.name} {current_user.surname} a accepté votre proposition d'échange ! "
+                f"Vous pouvez le contacter à l'adresse : {current_user.email}"
+            )
+        response_metadata = {
+            "type": "proposal_accepted",
+            "accepter_id": current_user.id,
+            "accepter_name": f"{current_user.name} {current_user.surname}",
+            "accepter_email": current_user.email
+        }
+    else:
+        if is_book_proposal and book_title:
+            response_text = (
+                f"❌ {current_user.name} {current_user.surname} a refusé votre proposition d'échange pour le livre \"{book_title}\"."
+            )
+        else:
+            response_text = (
+                f"❌ {current_user.name} {current_user.surname} a refusé votre proposition d'échange."
+            )
+        response_metadata = {
+            "type": "proposal_rejected",
+            "rejecter_id": current_user.id
+        }
+
+    response_message = Message(
+        id_emprunt=proposer_emprunt.id,
+        id_sender=assistant.id,
+        message_text=response_text,
+        is_read=0,
+        message_metadata=response_metadata
+    )
+    db.add(response_message)
+
+    db.commit()
+    db.refresh(proposal_message)
+
+    return {
+        "success": True,
+        "response": response,
+        "message": "Réponse enregistrée avec succès",
+        "redirect_to_profile": proposer.id if response == "accept" else None
+    }

@@ -75,6 +75,7 @@ class Message(Base):
     message_text = Column("MessageText", String(2000), nullable=False)
     datetime = Column("DateTime", DateTime, default=datetime.utcnow, nullable=False)
     is_read = Column("IsRead", Integer, default=0)
+    message_metadata = Column("MessageMetadata", JSON, nullable=True)
 
     # Relations
     emprunt = relationship("Emprunt", back_populates="messages")

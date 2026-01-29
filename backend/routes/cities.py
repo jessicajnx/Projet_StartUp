@@ -2,14 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from auth import SECRET_KEY, ALGORITHM
-import pymysql
+from sqlalchemy.orm import Session
+from database import get_db
+from models import User
 
 router = APIRouter(prefix="/api", tags=["API"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 @router.get("/me/city")
-def get_my_city(token: str = Depends(oauth2_scheme)):
+def get_my_city(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     """
     Retourne la ville de l'utilisateur connecté (via JWT).
     """
@@ -21,46 +23,30 @@ def get_my_city(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    connection = pymysql.connect(
-        host="127.0.0.1",
-        user="root",
-        password="",
-        db="projet_startup",
-        cursorclass=pymysql.cursors.DictCursor,
-    )
+    user = db.query(User).filter(User.email == email).first()
 
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT Villes FROM `user` WHERE Email = %s",
-                (email,),
-            )
-            user = cursor.fetchone()
-    finally:
-        connection.close()
-
-    if not user or not user["Villes"]:
+    if not user or not user.villes:
         raise HTTPException(status_code=404, detail="City not found")
 
-    return {"city": user["Villes"]}
+    return {"city": user.villes}
 
 @router.get("/users-cities")
-def get_users_cities():
+def get_users_cities(db: Session = Depends(get_db)):
     """
     Retourne la liste des utilisateurs avec leurs villes pour la carte.
+    Exclut l'utilisateur système Assistant Livre2Main.
     """
-    connection = pymysql.connect(
-        host="127.0.0.1",
-        user="root",
-        password="",
-        db="projet_startup",
-        cursorclass=pymysql.cursors.DictCursor,
-    )
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT ID, Name, Surname, Villes FROM `user`")
-            users = cursor.fetchall()
-    finally:
-        connection.close()
+    # Exclure l'Assistant de la liste
+    users = db.query(User).filter(User.email != "assistant@livre2main.com").all()
 
-    return users
+    # Formater la réponse pour correspondre au format attendu par le frontend
+    result = []
+    for user in users:
+        result.append({
+            "ID": user.id,
+            "Name": user.name,
+            "Surname": user.surname,
+            "Villes": user.villes
+        })
+
+    return result
