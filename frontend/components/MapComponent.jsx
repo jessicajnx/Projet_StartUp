@@ -5,8 +5,10 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 const DefaultIcon = L.icon({
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -16,6 +18,7 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+const DEFAULT_COORDS = [46.6, 2.4]; 
 
 export default function MapComponent() {
   const mapContainer = useRef(null);
@@ -26,59 +29,53 @@ export default function MapComponent() {
   const [selectedCity, setSelectedCity] = useState(null);
   const [error, setError] = useState('');
 
-  const CITY_COORDS = {
-    Paris: [48.8566, 2.3522],
-    Marseille: [43.2965, 5.3698],
-    Lyon: [45.764, 4.8357],
-    Toulouse: [43.6047, 1.4442],
-    Nice: [43.7102, 7.262],
-    Nantes: [47.2184, -1.5536],
-    Montpellier: [43.6108, 3.8767],
-    Strasbourg: [48.5734, 7.7521],
-    Bordeaux: [44.8378, -0.5792],
-    Lille: [50.6292, 3.0573],
-    Rennes: [48.1173, -1.6778],
-    Reims: [49.2583, 4.0317],
-    LeHavre: [49.4944, 0.1079],
-    SaintEtienne: [45.4397, 4.3872],
-    Toulon: [43.1242, 5.928],
-    Grenoble: [45.1885, 5.7245],
-    Dijon: [47.322, 5.0415],
-    Angers: [47.4784, -0.5632],
-    Nimes: [43.8367, 4.3601],
-    Villeurbanne: [45.7719, 4.8902],
-    Mouy : [49.2547, 2.3333],
+  const coordsCache = {};
+
+  const getCityCoords = async (city) => {
+    if (coordsCache[city]) return coordsCache[city];
+
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        city
+      )}&limit=1`;
+
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'MapProject/1.0 (votre-email@exemple.com)' },
+      });
+
+      const data = await response.json();
+      if (!data.length) return null;
+
+      const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      coordsCache[city] = coords; 
+      return coords;
+    } catch (err) {
+      console.error('Erreur Nominatim:', err);
+      return null;
+    }
   };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    // Éviter la double initialisation de la carte
     if (map.current) return;
 
-    const token = localStorage.getItem('token');
+    const initializeMap = async () => {
+      try {
+        const token = localStorage.getItem('token');
 
-    console.log('API_URL:', API_URL);
-    console.log('Calling:', `${API_URL}/users/me`);
-    console.log('Token exists:', !!token);
-
-    fetch(`${API_URL}/users/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((me) => {
+        const res = await fetch(`${API_URL}/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const me = await res.json();
         const userCity = me.villes;
-        const centerCoords = CITY_COORDS[userCity] || [46.6, 2.4];
 
-        // Vérifier à nouveau avant de créer la carte
-        if (!map.current && mapContainer.current) {
+        let centerCoords = DEFAULT_COORDS;
+        if (userCity) {
+          const coords = await getCityCoords(userCity);
+          if (coords) centerCoords = coords;
+        }
+
+        if (mapContainer.current) {
           map.current = L.map(mapContainer.current).setView(centerCoords, 12);
 
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -88,45 +85,35 @@ export default function MapComponent() {
             minZoom: 6,
           }).addTo(map.current);
 
-          fetch(`${API_URL}/api/users-cities`)
-            .then((res) => {
-              if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
-              }
-              return res.json();
-            })
-            .then((users) => {
-              const byCity = {};
+          const usersRes = await fetch(`${API_URL}/api/users-cities`);
+          const users = await usersRes.json();
 
-              users.forEach((user) => {
-                if (!user.Villes) return;
-                if (!byCity[user.Villes]) byCity[user.Villes] = [];
-                byCity[user.Villes].push(user);
-              });
+          const byCity = {};
+          for (const user of users) {
+            if (!user.Villes) continue;
+            if (!byCity[user.Villes]) byCity[user.Villes] = [];
+            byCity[user.Villes].push(user);
+          }
 
-              setUsersByCity(byCity);
+          setUsersByCity(byCity);
 
-              // Ajouter les markers uniquement si la carte existe encore
-              if (map.current) {
-                Object.keys(byCity).forEach((city) => {
-                  const coords = CITY_COORDS[city];
-                  if (!coords) return;
+          for (const city of Object.keys(byCity)) {
+            const coords = await getCityCoords(city);
+            if (!coords) continue;
 
-                  const marker = L.marker(coords).addTo(map.current);
-
-                  marker.on('click', () => {
-                    setSelectedCity(city);
-                  });
-                });
-              }
-            });
+            const marker = L.marker(coords).addTo(map.current);
+            marker.on('click', () => setSelectedCity(city));
+          }
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error('Erreur carte:', err);
         setError(err.message);
-      })
-      .finally(() => setLoaded(true));
+      } finally {
+        setLoaded(true);
+      }
+    };
+
+    initializeMap();
 
     return () => {
       if (map.current) {
@@ -139,7 +126,6 @@ export default function MapComponent() {
   const handleProposeExchange = async (user) => {
     try {
       const token = localStorage.getItem('token');
-
       if (!token) {
         alert('Vous devez être connecté pour proposer un échange');
         return;
@@ -149,11 +135,9 @@ export default function MapComponent() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          target_user_id: user.ID,
-        }),
+        body: JSON.stringify({ target_user_id: user.ID }),
       });
 
       if (!response.ok) {
@@ -162,17 +146,18 @@ export default function MapComponent() {
       }
 
       await response.json();
-      alert(`✅ Proposition d'échange envoyée à ${user.Name} ${user.Surname} !\n\nVous pouvez consulter la conversation dans votre messagerie.`);
-
-    } catch (error) {
-      console.error('Erreur lors de la proposition:', error);
-      alert(`❌ Erreur: ${error.message}`);
+      alert(
+        `✅ Proposition d'échange envoyée à ${user.Name} ${user.Surname} !\n\nVous pouvez consulter la conversation dans votre messagerie.`
+      );
+    } catch (err) {
+      console.error('Erreur lors de la proposition:', err);
+      alert(`❌ Erreur: ${err.message}`);
     }
   };
 
   return (
     <div style={{ width: '80%', margin: '40px auto' }}>
-      {/* ---------- Carte ---------- */}
+      {/* Carte */}
       <div
         ref={mapContainer}
         style={{
@@ -189,7 +174,6 @@ export default function MapComponent() {
         )}
       </div>
 
-      {/* ---------- Liste des utilisateurs ---------- */}
       {selectedCity && usersByCity[selectedCity] && (
         <div
           style={{
@@ -200,13 +184,7 @@ export default function MapComponent() {
             boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
           }}
         >
-          <h3
-            style={{
-              marginBottom: '15px',
-              fontSize: '18px',
-              color: '#333',
-            }}
-          >
+          <h3 style={{ marginBottom: '15px', fontSize: '18px', color: '#333' }}>
             Utilisateurs à {selectedCity}
           </h3>
 
@@ -238,7 +216,7 @@ export default function MapComponent() {
                 <button
                   onClick={() => handleProposeExchange(user)}
                   style={{
-                    backgroundColor: '#ffc0cb', // rose pale
+                    backgroundColor: '#ffc0cb',
                     border: 'none',
                     padding: '6px 12px',
                     borderRadius: '6px',
