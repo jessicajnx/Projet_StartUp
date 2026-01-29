@@ -12,6 +12,5 @@ python-dotenv
 Pillow
 requests
 openai
-react-leaflet
-leaflet
+
 
