@@ -93,30 +93,6 @@ export default function BibliothequePersonnellePage() {
         <div className={pageStyles.content}>
           <h1 className={pageStyles.title}>Ma Bibliothèque Personnelle</h1>
 
-
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-            <Link href="/map">
-              <button style={{
-                backgroundColor: '#10b981',
-                color: 'white',
-                padding: '10px 20px',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                transition: 'background-color 0.2s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#059669'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
-              >
-                🗺️ Voir la carte
-              </button>
-            </Link>
-          </div>
-
-
-
           <section className={pageStyles.statsSection}>
             <div className={cardStyles.statCard}>
               <div className={cardStyles.statNumber}>{total}</div>

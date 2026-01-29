@@ -298,36 +298,53 @@ export default function Livres() {
                         </p>
                       )}
                       <div className={cardStyles.cardFooter}>
-                        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
                           {isInMyLibrary ? (
                             <button
                               onClick={() => handleAddToLibrary(livre)}
                               disabled={isSaving}
                               className={`${buttonStyles.btn} ${buttonStyles.btnDanger}`}
-                              style={{ flex: 1 }}
+                              style={{ 
+                                width: '100%',
+                                padding: '12px',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                borderRadius: '8px'
+                              }}
                             >
-                              {isSaving ? 'Retrait...' : 'Retirer'}
+                              {isSaving ? 'Retrait...' : '✕ Retirer de ma bibliothèque'}
                             </button>
                           ) : (
                             <button
                               onClick={() => handleAddToLibrary(livre)}
                               disabled={isSaving}
                               className={`${buttonStyles.btn} ${buttonStyles.btnPrimary}`}
-                              style={{ flex: 1 }}
+                              style={{ 
+                                width: '100%',
+                                padding: '12px',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                borderRadius: '8px'
+                              }}
                             >
-                              {isSaving ? 'Ajout...' : 'Ajouter'}
+                              {isSaving ? 'Ajout...' : '+ Ajouter à ma bibliothèque'}
                             </button>
                           )}
                           <button
                             onClick={() => router.push(`/map?book=${livre.id}&title=${encodeURIComponent(livre.title)}`)}
                             className={`${buttonStyles.btn}`}
                             style={{ 
-                              flex: 1,
-                              backgroundColor: '#4CAF50',
-                              color: 'white'
+                              width: '100%',
+                              padding: '12px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              backgroundColor: '#F5E6D3',
+                              color: '#5c4b3a',
+                              borderRadius: '8px',
+                              border: 'none'
                             }}
                           >
-                            🔍 Emprunter
+                            🔍 Emprunter ce livre
                           </button>
                         </div>
                       </div>
