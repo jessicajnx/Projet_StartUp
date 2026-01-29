@@ -7,8 +7,56 @@ from schemas import Emprunt as EmpruntSchema, EmpruntCreate
 from datetime import datetime
 from routes.user_routes import get_current_user
 from pydantic import BaseModel
+from sqlalchemy import or_, and_, Integer, func
 
 router = APIRouter(prefix="/emprunts", tags=["Emprunts"])
+
+
+def check_conversation_limit(user: User, db: Session) -> None:
+    """
+    Vérifie si l'utilisateur a atteint sa limite d'échanges RÉELS.
+    Les utilisateurs avec le rôle 'Pauvre' sont limités à 1 échange actif à la fois.
+    Les utilisateurs 'Premium' n'ont pas de limite.
+    Les conversations avec l'Assistant (propositions) ne comptent PAS dans la limite.
+    Seuls les échanges RÉELS entre deux utilisateurs comptent.
+    """
+    # Si l'utilisateur est premium, pas de limite
+    if user.role.lower() == "premium":
+        return
+    
+    # Pour les utilisateurs 'Pauvre', vérifier le nombre d'échanges RÉELS actifs
+    if user.role.lower() == "pauvre":
+        # Récupérer l'ID de l'Assistant
+        assistant = db.query(User).filter(User.email == "assistant@livre2main.com").first()
+        assistant_id = assistant.id if assistant else None
+        
+        # Compter UNIQUEMENT les échanges RÉELS (sans l'Assistant)
+        query = db.query(Emprunt).filter(
+            or_(
+                Emprunt.id_user1 == user.id,
+                Emprunt.id_user2 == user.id
+            )
+        )
+        
+        # Exclure toutes les conversations avec l'Assistant
+        if assistant_id:
+            query = query.filter(
+                and_(
+                    Emprunt.id_user1 != assistant_id,
+                    Emprunt.id_user2 != assistant_id
+                )
+            )
+        
+        active_exchanges = query.count()
+        
+        # Limite à 1 échange RÉEL pour les utilisateurs pauvres
+        if active_exchanges >= 1:
+            raise HTTPException(
+                status_code=403,
+                detail="Limite d'échanges atteinte. Les utilisateurs gratuits sont limités à 1 échange actif à la fois. Passez à Premium pour des échanges illimités."
+            )
+    
+    return
 
 @router.post("/", response_model=EmpruntSchema, status_code=status.HTTP_201_CREATED)
 def create_emprunt(emprunt: EmpruntCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -22,6 +70,15 @@ def create_emprunt(emprunt: EmpruntCreate, db: Session = Depends(get_db), curren
         raise HTTPException(status_code=404, detail="Livre non trouvé")
     if emprunt.id_user1 == emprunt.id_user2:
         raise HTTPException(status_code=400, detail="Un utilisateur ne peut pas emprunter à lui-même")
+    
+    # Vérifier si c'est un échange RÉEL (sans l'assistant)
+    assistant = db.query(User).filter(User.email == "assistant@livre2main.com").first()
+    is_real_exchange = not assistant or (user1.id != assistant.id and user2.id != assistant.id)
+    
+    # Vérifier la limite UNIQUEMENT si c'est un échange réel
+    if is_real_exchange:
+        check_conversation_limit(user1, db)
+        check_conversation_limit(user2, db)
 
     payload = emprunt.dict()
     if not payload.get("datetime"):
