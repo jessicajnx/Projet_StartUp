@@ -191,7 +191,39 @@ export default function MapComponent() {
   }, [mapReady, bookFilter]);
 
   const handleProposeExchange = async (user) => {
-    // Rediriger vers le profil de l'utilisateur pour voir ses livres
+    // Si un livre est déjà sélectionné depuis /livres, proposer directement
+    if (bookFilter && bookTitle) {
+      try {
+        const token = localStorage.getItem('token');
+
+        const response = await fetch(`${API_URL}/emprunts/propose-exchange`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            target_user_id: parseInt(user.ID, 10),
+            book_id: parseInt(bookFilter, 10),
+            book_title: bookTitle,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Erreur lors de la proposition');
+        }
+
+        alert(`✅ Proposition d'échange envoyée pour le livre "${bookTitle}" !`);
+        return;
+      } catch (error) {
+        console.error('Erreur lors de la proposition:', error);
+        alert(`❌ Erreur: ${error.message}`);
+        return;
+      }
+    }
+
+    // Fallback si aucun livre n'a été sélectionné
     window.location.href = `/profil/${user.ID}`;
   };
 
