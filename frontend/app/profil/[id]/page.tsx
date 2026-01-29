@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -26,7 +26,12 @@ interface PersonalBook {
 export default function UserProfilPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const userId = params?.id as string;
+  
+  // Détecter si on vient depuis un échange
+  const fromExchange = searchParams?.get('from') === 'exchange';
+  const messageId = searchParams?.get('messageId');
 
   const [user, setUser] = useState<User | null>(null);
   const [livres, setLivres] = useState<PersonalBook[]>([]);
@@ -94,7 +99,7 @@ export default function UserProfilPage() {
       const token = localStorage.getItem('token');
       const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
-      const response = await fetch(`${API_URL}/emprunts/propose-book-exchange`, {
+      const response = await fetch(`${API_URL}/emprunts/propose-exchange`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,6 +121,73 @@ export default function UserProfilPage() {
       alert(`✅ Proposition d'échange envoyée pour le livre "${bookTitle}" !\n\nL'utilisateur recevra votre proposition dans sa messagerie.`);
     } catch (error: any) {
       console.error('Erreur lors de la proposition:', error);
+      alert(`❌ Erreur: ${error.message}`);
+    }
+  };
+
+  const handleAcceptExchange = async () => {
+    if (!selectedBookId || !messageId) return;
+    
+    try {
+      const selectedBook = livres.find(b => b.id === selectedBookId);
+      if (!selectedBook) throw new Error('Livre non trouvé');
+      
+      const token = localStorage.getItem('token');
+      const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+
+      const response = await fetch(`${API_URL}/messages/proposal/${messageId}/respond?response=accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          selected_book_id: selectedBookId,
+          selected_book_title: selectedBook.title,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Erreur lors de la confirmation');
+      }
+
+      alert(`✅ Échange confirmé avec le livre "${selectedBook.title}" !\n\nVous pouvez contacter l'autre utilisateur dans votre messagerie.`);
+      
+      setTimeout(() => {
+        router.push('/messagerie');
+      }, 1500);
+    } catch (error: any) {
+      console.error('Erreur lors de l\'acceptation:', error);
+      alert(`❌ Erreur: ${error.message}`);
+    }
+  };
+
+  const handleRejectExchange = async () => {
+    if (!messageId) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+
+      const response = await fetch(`${API_URL}/messages/proposal/${messageId}/respond?response=reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Erreur lors du refus');
+      }
+
+      alert('❌ Proposition d\'échange refusée');
+      setTimeout(() => {
+        router.push('/messagerie');
+      }, 1500);
+    } catch (error: any) {
+      console.error('Erreur lors du refus:', error);
       alert(`❌ Erreur: ${error.message}`);
     }
   };
@@ -192,21 +264,63 @@ export default function UserProfilPage() {
                       )}
                     </div>
                     <button
-                      onClick={() => handleBookExchangeProposal(livre.id, livre.title)}
-                      disabled={selectedBookId !== null}
+                      onClick={() => {
+                        if (fromExchange) {
+                          setSelectedBookId(livre.id);
+                        } else {
+                          handleBookExchangeProposal(livre.id, livre.title);
+                        }
+                      }}
+                      disabled={fromExchange && selectedBookId !== null && selectedBookId !== livre.id}
                       style={{
                         ...styles.exchangeButton,
-                        ...(selectedBookId !== null && styles.exchangeButtonDisabled),
+                        ...(fromExchange && selectedBookId !== null && selectedBookId !== livre.id && styles.exchangeButtonDisabled),
                         ...(selectedBookId === livre.id && styles.exchangeButtonSelected),
                       }}
                     >
-                      {selectedBookId === livre.id ? '✓ Sélectionné' : 'Proposer cet échange'}
+                      {selectedBookId === livre.id 
+                        ? '✓ Sélectionné' 
+                        : fromExchange 
+                          ? 'Sélectionner ce livre'
+                          : 'Proposer cet échange'}
                     </button>
                   </div>
                 ))}
               </div>
             )}
           </div>
+
+          {fromExchange && (
+            <div style={styles.exchangeActionsSection}>
+              <div style={styles.exchangeInfo}>
+                {selectedBookId ? (
+                  <p style={styles.selectedBookText}>
+                    📚 Vous avez sélectionné : "<strong>{livres.find(b => b.id === selectedBookId)?.title}</strong>"
+                  </p>
+                ) : (
+                  <p style={styles.selectBookText}>Sélectionnez un livre pour confirmer l'échange</p>
+                )}
+              </div>
+              <div style={styles.exchangeButtonsRow}>
+                <button 
+                  onClick={handleAcceptExchange}
+                  disabled={!selectedBookId}
+                  style={{
+                    ...styles.acceptButton,
+                    ...(!selectedBookId && styles.buttonDisabled),
+                  }}
+                >
+                  ✅ Accepter l'échange
+                </button>
+                <button 
+                  onClick={handleRejectExchange}
+                  style={styles.rejectButton}
+                >
+                  ❌ Refuser
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
       <Footer />
@@ -241,7 +355,7 @@ const styles = {
     color: '#d32f2f',
   },
   backButton: {
-    backgroundColor: '#8B7355',
+    backgroundColor: '#8b5e3c',
     color: 'white',
     border: 'none',
     padding: '0.75rem 1.5rem',
@@ -276,27 +390,6 @@ const styles = {
     color: '#5D4E37',
     marginBottom: '1.5rem',
   },
-  userInfo: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '1rem',
-    maxWidth: '400px',
-    margin: '0 auto',
-  },
-  infoItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: '0.75rem',
-    backgroundColor: '#F5E6D3',
-    borderRadius: '8px',
-  },
-  infoLabel: {
-    fontWeight: 'bold',
-    color: '#5D4E37',
-  },
-  infoValue: {
-    color: '#8B7355',
-  },
   librarySection: {
     backgroundColor: 'white',
     borderRadius: '12px',
@@ -323,8 +416,6 @@ const styles = {
     borderRadius: '8px',
     padding: '1rem',
     textAlign: 'center' as const,
-    transition: 'transform 0.2s',
-    cursor: 'pointer',
   },
   bookCover: {
     width: '100%',
@@ -368,7 +459,7 @@ const styles = {
   exchangeButton: {
     marginTop: '0.75rem',
     padding: '0.5rem 1rem',
-    backgroundColor: '#8B7355',
+    backgroundColor: '#8b5e3c',
     color: 'white',
     border: 'none',
     borderRadius: '6px',
@@ -384,7 +475,65 @@ const styles = {
     opacity: 0.6,
   },
   exchangeButtonSelected: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#6d5642',
     cursor: 'default',
+  },
+  exchangeActionsSection: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '2rem',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    marginTop: '2rem',
+    borderTop: '3px solid #8b5e3c',
+  },
+  exchangeInfo: {
+    marginBottom: '1.5rem',
+    padding: '1rem',
+    backgroundColor: '#F5E6D3',
+    borderRadius: '8px',
+    borderLeft: '4px solid #8b5e3c',
+  },
+  selectedBookText: {
+    margin: 0,
+    color: '#6d5642',
+    fontSize: '1.1rem',
+    fontWeight: 'bold',
+  },
+  selectBookText: {
+    margin: 0,
+    color: '#8b5e3c',
+    fontSize: '1rem',
+  },
+  exchangeButtonsRow: {
+    display: 'flex',
+    gap: '1rem',
+    justifyContent: 'center',
+  },
+  acceptButton: {
+    padding: '0.75rem 2rem',
+    backgroundColor: '#8b5e3c',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  rejectButton: {
+    padding: '0.75rem 2rem',
+    backgroundColor: '#D4B59E',
+    color: '#5D4E37',
+    border: '2px solid #8B7355',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  buttonDisabled: {
+    backgroundColor: '#CCCCCC',
+    cursor: 'not-allowed',
+    opacity: 0.6,
   },
 };

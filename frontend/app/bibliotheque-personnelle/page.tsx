@@ -32,6 +32,7 @@ interface PersonalBooksResponse {
 
 export default function BibliothequePersonnellePage() {
   const router = useRouter();
+  
   const [books, setBooks] = useState<PersonalBook[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);

@@ -151,8 +151,14 @@ export default function MessageriePage() {
   };
 
   /** Répondre à une proposition */
-  const handleProposalResponse = async (messageId: number, response: 'accept' | 'reject') => {
+  const handleProposalResponse = async (messageId: number, response: 'accept' | 'reject' | 'view_library', proposerId?: number) => {
     try {
+      // Si l'utilisateur veut voir la bibliothèque, rediriger directement
+      if (response === 'view_library' && proposerId) {
+        router.push(`/profil/${proposerId}?from=exchange&messageId=${messageId}`);
+        return;
+      }
+
       const token = localStorage.getItem('token');
       const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
@@ -296,10 +302,12 @@ export default function MessageriePage() {
                                 {msg.metadata.actions.map((action: any, index: number) => (
                                   <button
                                     key={index}
-                                    onClick={() => handleProposalResponse(msg.id, action.value)}
+                                    onClick={() => handleProposalResponse(msg.id, action.value, msg.metadata?.proposer_id)}
                                     style={{
                                       ...styles.actionButton,
-                                      ...(action.style === 'success' ? styles.actionButtonSuccess : styles.actionButtonDanger),
+                                      ...(action.style === 'success' ? styles.actionButtonSuccess : 
+                                          action.style === 'primary' ? styles.actionButtonPrimary :
+                                          styles.actionButtonDanger),
                                     }}
                                   >
                                     {action.label}
@@ -614,6 +622,10 @@ const styles = {
   } as React.CSSProperties,
   actionButtonSuccess: {
     backgroundColor: '#4CAF50',
+    color: 'white',
+  } as React.CSSProperties,
+  actionButtonPrimary: {
+    backgroundColor: '#2196F3',
     color: 'white',
   } as React.CSSProperties,
   actionButtonDanger: {

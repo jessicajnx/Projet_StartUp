@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from database import get_db
 from models import Message, Emprunt, User, Livre
 from schemas import (
@@ -12,8 +12,14 @@ from schemas import (
 from .user_routes import get_current_user
 from sqlalchemy import or_, and_, desc, func
 from datetime import datetime
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/messages", tags=["Messages"])
+
+
+class ProposalResponseData(BaseModel):
+    selected_book_id: Optional[int] = None
+    selected_book_title: Optional[str] = None
 
 
 def check_user_in_emprunt(emprunt_id: int, user_id: int, db: Session) -> Emprunt:
@@ -322,12 +328,14 @@ def get_conversation_limit_status(
 def respond_to_proposal(
     message_id: int,
     response: str,
+    body: ProposalResponseData = Body(default=None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     Répond à une proposition d'échange (accepter ou refuser)
     response: "accept" ou "reject"
+    body: contient selected_book_id et selected_book_title si l'utilisateur accepte
     """
     # Vérifier que la réponse est valide
     if response not in ["accept", "reject"]:
@@ -361,13 +369,67 @@ def respond_to_proposal(
     proposal_type = proposal_message.message_metadata.get("type")
     is_book_proposal = proposal_type == "book_proposal"
     
-    # Si l'utilisateur accepte, créer l'emprunt réel UNIQUEMENT pour book_proposal (étape 3)
-    # Pour "proposal" (étape 2), on crée juste un emprunt avec l'assistant
+    # Si l'utilisateur accepte, créer l'emprunt réel
     real_emprunt = None
     if response == "accept":
-        if is_book_proposal:
-            # ÉTAPE 3 : Acceptation finale d'une proposition de livre spécifique
-            # C'est ici qu'on crée l'échange RÉEL et qu'on vérifie les limites
+        # NOUVEAU FLUX: Pour "proposal" avec livre sélectionné par l'accepteur
+        # Le proposant a proposé son livre X, l'accepteur choisit un livre Y du proposant
+        if proposal_type == "proposal" and body and body.selected_book_id:
+            # Vérifier les limites d'échanges
+            check_conversation_limit(current_user, db)
+            check_conversation_limit(proposer, db)
+            
+            # Récupérer le livre choisi par l'accepteur (de la bibliothèque du proposant)
+            selected_livre = db.query(Livre).filter(Livre.id == body.selected_book_id).first()
+            
+            if not selected_livre:
+                raise HTTPException(status_code=404, detail="Livre sélectionné non trouvé")
+            
+            # Créer l'emprunt réel entre le proposant et l'accepteur
+            real_emprunt = Emprunt(
+                id_user1=proposer_id,
+                id_user2=current_user.id,
+                id_livre=selected_livre.id,
+                datetime=datetime.utcnow()
+            )
+            db.add(real_emprunt)
+            db.flush()
+            
+            # Marquer toutes les propositions liées comme acceptées
+            generic_book = db.query(Livre).filter(Livre.nom == "Proposition d'échange").first()
+            
+            if generic_book:
+                user_emprunts = db.query(Emprunt).filter(
+                    Emprunt.id_livre == generic_book.id,
+                    or_(
+                        and_(Emprunt.id_user1 == assistant.id, or_(Emprunt.id_user2 == current_user.id, Emprunt.id_user2 == proposer_id)),
+                        and_(Emprunt.id_user2 == assistant.id, or_(Emprunt.id_user1 == current_user.id, Emprunt.id_user1 == proposer_id))
+                    )
+                ).all()
+                
+                emprunt_ids = [e.id for e in user_emprunts]
+                
+                if emprunt_ids:
+                    related_proposals = db.query(Message).filter(
+                        Message.id_emprunt.in_(emprunt_ids),
+                        Message.id_sender == assistant.id,
+                        func.json_extract(Message.message_metadata, '$.status') == '"pending"',
+                        or_(
+                            func.json_extract(Message.message_metadata, '$.type') == '"proposal"',
+                            func.json_extract(Message.message_metadata, '$.type') == '"book_proposal"'
+                        )
+                    ).all()
+                    
+                    for related in related_proposals:
+                        related_metadata = related.message_metadata.copy()
+                        related_metadata["status"] = "accepted"
+                        related_metadata["final_acceptance_time"] = datetime.utcnow().isoformat()
+                        related_metadata["selected_book_id"] = body.selected_book_id
+                        related_metadata["selected_book_title"] = body.selected_book_title
+                        related.message_metadata = related_metadata
+            
+        elif is_book_proposal:
+            # ANCIEN FLUX : Acceptation finale d'une proposition de livre spécifique
             check_conversation_limit(current_user, db)
             check_conversation_limit(proposer, db)
             
@@ -404,11 +466,9 @@ def respond_to_proposal(
             db.flush()
             
             # Trouver et mettre à jour TOUTES les propositions liées entre les deux utilisateurs
-            # Récupérer le livre générique pour identifier les emprunts de propositions
             generic_book = db.query(Livre).filter(Livre.nom == "Proposition d'échange").first()
             
             if generic_book:
-                # Récupérer tous les emprunts avec l'assistant pour ces deux utilisateurs
                 user_emprunts = db.query(Emprunt).filter(
                     Emprunt.id_livre == generic_book.id,
                     or_(
@@ -420,7 +480,6 @@ def respond_to_proposal(
                 emprunt_ids = [e.id for e in user_emprunts]
                 
                 if emprunt_ids:
-                    # Trouver tous les messages de propositions en attente dans ces emprunts
                     related_proposals = db.query(Message).filter(
                         Message.id_emprunt.in_(emprunt_ids),
                         Message.id_sender == assistant.id,
@@ -431,14 +490,13 @@ def respond_to_proposal(
                         )
                     ).all()
                     
-                    # Marquer toutes les propositions liées comme acceptées
                     for related in related_proposals:
                         related_metadata = related.message_metadata.copy()
                         related_metadata["status"] = "accepted"
                         related_metadata["final_acceptance_time"] = datetime.utcnow().isoformat()
                         related.message_metadata = related_metadata
             
-        # Si c'est juste "proposal" (étape 2), on ne crée rien ici, c'est géré ailleurs
+        # Si c'est juste "proposal" sans livre sélectionné, ne rien faire
 
     # Mettre à jour le statut de la proposition
     metadata = proposal_message.message_metadata.copy()
@@ -472,10 +530,64 @@ def respond_to_proposal(
 
     # Envoyer un message à l'expéditeur
     book_title = metadata.get("book_title")
+    selected_book_title = body.selected_book_title if body else None
     is_book_proposal = metadata.get("type") == "book_proposal"
 
     if response == "accept":
-        if is_book_proposal and book_title:
+        if selected_book_title:
+            # Nouveau flux : l'utilisateur a choisi un livre de la bibliothèque du proposant
+            # Message pour le proposant (celui qui voulait emprunter)
+            response_text = (
+                f"✅ Échange confirmé !\n\n"
+                f"📚 Vous recevez : \"{selected_book_title}\" (de {current_user.name} {current_user.surname})\n"
+                f"📖 Vous donnez : \"{book_title}\"\n\n"
+                f"Contact : {current_user.email}"
+            )
+            
+            # Créer aussi un message pour l'accepteur dans sa conversation
+            accepter_emprunt = db.query(Emprunt).filter(
+                (
+                    (Emprunt.id_user1 == assistant.id) & (Emprunt.id_user2 == current_user.id)
+                ) | (
+                    (Emprunt.id_user1 == current_user.id) & (Emprunt.id_user2 == assistant.id)
+                )
+            ).filter(Emprunt.id_livre == generic_book.id).first()
+            
+            if not accepter_emprunt:
+                accepter_emprunt = Emprunt(
+                    id_user1=assistant.id,
+                    id_user2=current_user.id,
+                    id_livre=generic_book.id,
+                    datetime=datetime.utcnow()
+                )
+                db.add(accepter_emprunt)
+                db.flush()
+            
+            # Message pour l'accepteur (celui qui a choisi le livre)
+            accepter_message_text = (
+                f"✅ Échange confirmé !\n\n"
+                f"📚 Vous recevez : \"{book_title}\" (de {proposer.name} {proposer.surname})\n"
+                f"📖 Vous donnez : \"{selected_book_title}\"\n\n"
+                f"Contact : {proposer.email}"
+            )
+            
+            accepter_message = Message(
+                id_emprunt=accepter_emprunt.id,
+                id_sender=assistant.id,
+                message_text=accepter_message_text,
+                is_read=0,
+                message_metadata={
+                    "type": "exchange_confirmed",
+                    "other_user_id": proposer_id,
+                    "other_user_name": f"{proposer.name} {proposer.surname}",
+                    "other_user_email": proposer.email,
+                    "book_received": book_title,
+                    "book_given": selected_book_title
+                }
+            )
+            db.add(accepter_message)
+            
+        elif is_book_proposal and book_title:
             response_text = (
                 f"{current_user.name} {current_user.surname} a accepté votre proposition d'échange pour le livre \"{book_title}\" ! "
                 f"Vous pouvez le contacter à l'adresse : {current_user.email}"
@@ -491,6 +603,10 @@ def respond_to_proposal(
             "accepter_name": f"{current_user.name} {current_user.surname}",
             "accepter_email": current_user.email
         }
+        if selected_book_title:
+            response_metadata["selected_book_title"] = selected_book_title
+            response_metadata["book_given"] = book_title
+            response_metadata["book_received"] = selected_book_title
     else:
         if is_book_proposal and book_title:
             response_text = (

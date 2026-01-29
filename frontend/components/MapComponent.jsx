@@ -191,35 +191,8 @@ export default function MapComponent() {
   }, [mapReady, bookFilter]);
 
   const handleProposeExchange = async (user) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Vous devez être connecté pour proposer un échange');
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/emprunts/propose-exchange`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ target_user_id: user.ID }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Erreur lors de la proposition');
-      }
-
-      await response.json();
-      alert(
-        `✅ Proposition d'échange envoyée à ${user.Name} ${user.Surname} !\n\nVous pouvez consulter la conversation dans votre messagerie.`
-      );
-    } catch (err) {
-      console.error('Erreur lors de la proposition:', err);
-      alert(`❌ Erreur: ${err.message}`);
-    }
+    // Rediriger vers le profil de l'utilisateur pour voir ses livres
+    window.location.href = `/profil/${user.ID}`;
   };
 
   return (

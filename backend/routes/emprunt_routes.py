@@ -132,6 +132,8 @@ def get_emprunts_emprunter(user_id: int, db: Session = Depends(get_db), current_
 
 class ProposeExchangeRequest(BaseModel):
     target_user_id: int
+    book_id: int
+    book_title: str
 
 class ProposeBookExchangeRequest(BaseModel):
     target_user_id: int
@@ -217,17 +219,19 @@ def propose_exchange(
 
     # 4. Créer le message automatique de l'assistant avec les actions
     message_text = (
-        f"🔔 {current_user.name} {current_user.surname} souhaite vous proposer un échange de livre !"
+        f"📚 {current_user.name} {current_user.surname} veut échanger \"{request.book_title}\" avec toi"
     )
 
-    # Métadonnées pour les actions (boutons Oui/Non)
+    # Métadonnées pour les actions (bouton voir quel livre échanger)
     metadata = {
         "type": "proposal",
         "proposer_id": current_user.id,
         "proposer_name": f"{current_user.name} {current_user.surname}",
         "proposer_email": current_user.email,
+        "book_id": request.book_id,
+        "book_title": request.book_title,
         "actions": [
-            {"label": "Accepter", "value": "accept", "style": "success"},
+            {"label": "Voir quel livre échanger", "value": "view_library", "style": "primary"},
             {"label": "Refuser", "value": "reject", "style": "danger"}
         ],
         "status": "pending"  # pending, accepted, rejected
