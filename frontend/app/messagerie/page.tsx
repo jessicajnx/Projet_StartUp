@@ -19,7 +19,9 @@ interface Message {
   id: number;
   text: string;
   sender: 'me' | 'other';
+  senderName?: string;
   timestamp: string;
+  metadata?: any;
   bookInfo?: {
     title: string;
     author: string;
@@ -88,6 +90,8 @@ export default function MessageriePage() {
           id: msg.id,
           text: msg.message_text,
           sender: msg.id_sender === currentUser.id ? 'me' : 'other',
+          senderName: msg.id_sender === currentUser.id ? 'Vous' : `${msg.sender_name} ${msg.sender_surname}`,
+          metadata: msg.message_metadata,
           timestamp: new Date(msg.datetime).toLocaleTimeString('fr-FR', {
             hour: '2-digit',
             minute: '2-digit',
@@ -108,7 +112,7 @@ export default function MessageriePage() {
     }
   };
 
-  /** Envoi d’un message */
+  /** Envoi d'un message */
   const handleSendMessage = async () => {
     if (!newMessage.trim() || selectedConversation === null) return;
 
@@ -143,6 +147,43 @@ export default function MessageriePage() {
     } catch (error) {
       console.error('Erreur envoi message', error);
       alert("Erreur lors de l'envoi du message");
+    }
+  };
+
+  /** Répondre à une proposition */
+  const handleProposalResponse = async (messageId: number, response: 'accept' | 'reject') => {
+    try {
+      const token = localStorage.getItem('token');
+      const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+
+      const res = await fetch(`${API_URL}/messages/proposal/${messageId}/respond?response=${response}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || 'Erreur lors de la réponse');
+      }
+
+      const data = await res.json();
+
+      // Recharger les messages pour voir la mise à jour
+      if (selectedConversation) {
+        await handleSelectConversation(selectedConversation);
+      }
+
+      // Si accepté, rediriger vers le profil
+      if (response === 'accept' && data.redirect_to_profile) {
+        router.push(`/profil/${data.redirect_to_profile}`);
+      } else {
+        alert(response === 'accept' ? '✅ Proposition acceptée !' : '❌ Proposition refusée');
+      }
+    } catch (error: any) {
+      console.error('Erreur lors de la réponse:', error);
+      alert(`Erreur: ${error.message}`);
     }
   };
 
@@ -232,19 +273,50 @@ export default function MessageriePage() {
                           ...(msg.sender === 'me' ? styles.messageMe : styles.messageOther),
                         }}
                       >
-                        <div
-                          style={{
-                            ...styles.messageBubble,
-                            ...(msg.sender === 'me' ? styles.messageBubbleMe : styles.messageBubbleOther),
-                          }}
-                        >
-                          {msg.bookInfo && (
-                            <div style={styles.messageBookInfo}>
-                              📖 {msg.bookInfo.title} - {msg.bookInfo.author}
-                            </div>
+                        <div style={styles.messageWrapper}>
+                          {msg.sender === 'other' && msg.senderName && (
+                            <div style={styles.senderName}>{msg.senderName}</div>
                           )}
-                          <div>{msg.text}</div>
-                          <div style={styles.messageTime}>{msg.timestamp}</div>
+                          <div
+                            style={{
+                              ...styles.messageBubble,
+                              ...(msg.sender === 'me' ? styles.messageBubbleMe : styles.messageBubbleOther),
+                            }}
+                          >
+                            {msg.bookInfo && (
+                              <div style={styles.messageBookInfo}>
+                                📖 {msg.bookInfo.title} - {msg.bookInfo.author}
+                              </div>
+                            )}
+                            <div>{msg.text}</div>
+
+                            {/* Boutons d'action pour les propositions */}
+                            {msg.metadata?.actions && msg.metadata?.status === 'pending' && msg.sender === 'other' && (
+                              <div style={styles.actionButtons}>
+                                {msg.metadata.actions.map((action: any, index: number) => (
+                                  <button
+                                    key={index}
+                                    onClick={() => handleProposalResponse(msg.id, action.value)}
+                                    style={{
+                                      ...styles.actionButton,
+                                      ...(action.style === 'success' ? styles.actionButtonSuccess : styles.actionButtonDanger),
+                                    }}
+                                  >
+                                    {action.label}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Afficher le statut si la proposition a été traitée */}
+                            {msg.metadata?.status && msg.metadata?.status !== 'pending' && (
+                              <div style={styles.proposalStatus}>
+                                {msg.metadata.status === 'accepted' ? '✅ Acceptée' : '❌ Refusée'}
+                              </div>
+                            )}
+
+                            <div style={styles.messageTime}>{msg.timestamp}</div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -453,8 +525,19 @@ const styles = {
   messageOther: {
     justifyContent: 'flex-start',
   } as React.CSSProperties,
-  messageBubble: {
+  messageWrapper: {
     maxWidth: '70%',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.25rem',
+  } as React.CSSProperties,
+  senderName: {
+    fontSize: '0.75rem',
+    fontWeight: 'bold',
+    color: '#8B7355',
+    paddingLeft: '0.5rem',
+  } as React.CSSProperties,
+  messageBubble: {
     padding: '0.75rem 1rem',
     borderRadius: '12px',
     wordWrap: 'break-word' as const,
@@ -514,5 +597,33 @@ const styles = {
   noConvIcon: {
     fontSize: '5rem',
     marginBottom: '1rem',
+  } as React.CSSProperties,
+  actionButtons: {
+    display: 'flex',
+    gap: '0.5rem',
+    marginTop: '0.75rem',
+  } as React.CSSProperties,
+  actionButton: {
+    padding: '0.5rem 1rem',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    fontWeight: 'bold',
+    transition: 'all 0.2s',
+  } as React.CSSProperties,
+  actionButtonSuccess: {
+    backgroundColor: '#4CAF50',
+    color: 'white',
+  } as React.CSSProperties,
+  actionButtonDanger: {
+    backgroundColor: '#f44336',
+    color: 'white',
+  } as React.CSSProperties,
+  proposalStatus: {
+    marginTop: '0.5rem',
+    fontSize: '0.85rem',
+    fontWeight: 'bold',
+    fontStyle: 'italic',
   } as React.CSSProperties,
 };

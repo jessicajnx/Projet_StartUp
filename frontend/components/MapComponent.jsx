@@ -15,6 +15,8 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+
 export default function MapComponent() {
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -22,6 +24,7 @@ export default function MapComponent() {
   const [loaded, setLoaded] = useState(false);
   const [usersByCity, setUsersByCity] = useState({});
   const [selectedCity, setSelectedCity] = useState(null);
+  const [error, setError] = useState('');
 
   const CITY_COORDS = {
     Paris: [48.8566, 2.3522],
@@ -44,59 +47,85 @@ export default function MapComponent() {
     Angers: [47.4784, -0.5632],
     Nimes: [43.8367, 4.3601],
     Villeurbanne: [45.7719, 4.8902],
+    Mouy : [49.2547, 2.3333],
   };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const token = localStorage.getItem('access_token');
+    // Éviter la double initialisation de la carte
+    if (map.current) return;
 
-    fetch('http://127.0.0.1:8000/api/me', {
+    const token = localStorage.getItem('token');
+
+    console.log('API_URL:', API_URL);
+    console.log('Calling:', `${API_URL}/users/me`);
+    console.log('Token exists:', !!token);
+
+    fetch(`${API_URL}/users/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((me) => {
-        const userCity = me.city;
+        const userCity = me.villes;
         const centerCoords = CITY_COORDS[userCity] || [46.6, 2.4];
 
-        map.current = L.map(mapContainer.current).setView(centerCoords, 12);
+        // Vérifier à nouveau avant de créer la carte
+        if (!map.current && mapContainer.current) {
+          map.current = L.map(mapContainer.current).setView(centerCoords, 12);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          maxZoom: 13,
-          minZoom: 6,
-        }).addTo(map.current);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 13,
+            minZoom: 6,
+          }).addTo(map.current);
 
-        fetch('http://127.0.0.1:8000/api/users-cities')
-          .then((res) => res.json())
-          .then((users) => {
-            const byCity = {};
+          fetch(`${API_URL}/api/users-cities`)
+            .then((res) => {
+              if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+              }
+              return res.json();
+            })
+            .then((users) => {
+              const byCity = {};
 
-            users.forEach((user) => {
-              if (!user.Villes) return;
-              if (!byCity[user.Villes]) byCity[user.Villes] = [];
-              byCity[user.Villes].push(user);
-            });
-
-            setUsersByCity(byCity);
-
-            // Ajouter les markers
-            Object.keys(byCity).forEach((city) => {
-              const coords = CITY_COORDS[city];
-              if (!coords) return;
-
-              const marker = L.marker(coords).addTo(map.current);
-
-              marker.on('click', () => {
-                setSelectedCity(city);
+              users.forEach((user) => {
+                if (!user.Villes) return;
+                if (!byCity[user.Villes]) byCity[user.Villes] = [];
+                byCity[user.Villes].push(user);
               });
+
+              setUsersByCity(byCity);
+
+              // Ajouter les markers uniquement si la carte existe encore
+              if (map.current) {
+                Object.keys(byCity).forEach((city) => {
+                  const coords = CITY_COORDS[city];
+                  if (!coords) return;
+
+                  const marker = L.marker(coords).addTo(map.current);
+
+                  marker.on('click', () => {
+                    setSelectedCity(city);
+                  });
+                });
+              }
             });
-          });
+        }
       })
-      .catch((err) => console.error('Erreur carte:', err))
+      .catch((err) => {
+        console.error('Erreur carte:', err);
+        setError(err.message);
+      })
       .finally(() => setLoaded(true));
 
     return () => {
@@ -107,8 +136,38 @@ export default function MapComponent() {
     };
   }, []);
 
-  const handleProposeExchange = (user) => {
-    alert(`Proposer un échange à ${user.Name} ${user.Surname}`);
+  const handleProposeExchange = async (user) => {
+    try {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        alert('Vous devez être connecté pour proposer un échange');
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/emprunts/propose-exchange`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          target_user_id: user.ID,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Erreur lors de la proposition');
+      }
+
+      await response.json();
+      alert(`✅ Proposition d'échange envoyée à ${user.Name} ${user.Surname} !\n\nVous pouvez consulter la conversation dans votre messagerie.`);
+
+    } catch (error) {
+      console.error('Erreur lors de la proposition:', error);
+      alert(`❌ Erreur: ${error.message}`);
+    }
   };
 
   return (

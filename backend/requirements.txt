@@ -13,4 +13,3 @@ Pillow
 requests
 openai
 
-
