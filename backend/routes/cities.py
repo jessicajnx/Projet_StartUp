@@ -33,7 +33,7 @@ def get_my_city(token: str = Depends(oauth2_scheme), db: Session = Depends(get_d
 @router.get("/users-cities")
 def get_users_cities(db: Session = Depends(get_db)):
     """
-    Retourne la liste des utilisateurs avec leurs villes pour la carte.
+    Retourne la liste des utilisateurs avec leurs villes et leurs livres pour la carte.
     Exclut l'utilisateur système Assistant Livre2Main.
     """
     # Exclure l'Assistant de la liste
@@ -42,11 +42,23 @@ def get_users_cities(db: Session = Depends(get_db)):
     # Formater la réponse pour correspondre au format attendu par le frontend
     result = []
     for user in users:
+        # Récupérer les livres de la bibliothèque personnelle
+        personal_books = []
+        for book in user.personal_books:
+            personal_books.append({
+                "id": book.id,
+                "title": book.title,
+                "source_id": book.source_id,
+                "authors": book.authors,
+                "cover_url": book.cover_url,
+            })
+        
         result.append({
             "ID": user.id,
             "Name": user.name,
             "Surname": user.surname,
-            "Villes": user.villes
+            "Villes": user.villes,
+            "bibliotheque_personnelle": personal_books
         })
 
     return result

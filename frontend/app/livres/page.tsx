@@ -298,23 +298,38 @@ export default function Livres() {
                         </p>
                       )}
                       <div className={cardStyles.cardFooter}>
-                        {isInMyLibrary ? (
+                        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                          {isInMyLibrary ? (
+                            <button
+                              onClick={() => handleAddToLibrary(livre)}
+                              disabled={isSaving}
+                              className={`${buttonStyles.btn} ${buttonStyles.btnDanger}`}
+                              style={{ flex: 1 }}
+                            >
+                              {isSaving ? 'Retrait...' : 'Retirer'}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleAddToLibrary(livre)}
+                              disabled={isSaving}
+                              className={`${buttonStyles.btn} ${buttonStyles.btnPrimary}`}
+                              style={{ flex: 1 }}
+                            >
+                              {isSaving ? 'Ajout...' : 'Ajouter'}
+                            </button>
+                          )}
                           <button
-                            onClick={() => handleAddToLibrary(livre)}
-                            disabled={isSaving}
-                            className={`${buttonStyles.btn} ${buttonStyles.btnDanger} ${buttonStyles.btnFull}`}
+                            onClick={() => router.push(`/map?book=${livre.id}&title=${encodeURIComponent(livre.title)}`)}
+                            className={`${buttonStyles.btn}`}
+                            style={{ 
+                              flex: 1,
+                              backgroundColor: '#4CAF50',
+                              color: 'white'
+                            }}
                           >
-                            {isSaving ? 'Retrait...' : 'Retirer'}
+                            🔍 Emprunter
                           </button>
-                        ) : (
-                          <button
-                            onClick={() => handleAddToLibrary(livre)}
-                            disabled={isSaving}
-                            className={`${buttonStyles.btn} ${buttonStyles.btnPrimary} ${buttonStyles.btnFull}`}
-                          >
-                            {isSaving ? 'Ajout...' : 'Ajouter'}
-                          </button>
-                        )}
+                        </div>
                       </div>
                     </div>
                   </div>

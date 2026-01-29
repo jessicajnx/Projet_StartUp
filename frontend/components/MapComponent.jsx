@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -20,11 +21,15 @@ const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').rep
 export default function MapComponent() {
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const searchParams = useSearchParams();
 
   const [loaded, setLoaded] = useState(false);
   const [usersByCity, setUsersByCity] = useState({});
   const [selectedCity, setSelectedCity] = useState(null);
   const [error, setError] = useState('');
+  const [bookFilter, setBookFilter] = useState(null);
+  const [bookTitle, setBookTitle] = useState(null);
+  const [mapReady, setMapReady] = useState(false);
 
   const CITY_COORDS = {
     Paris: [48.8566, 2.3522],
@@ -49,6 +54,16 @@ export default function MapComponent() {
     Villeurbanne: [45.7719, 4.8902],
     Mouy : [49.2547, 2.3333],
   };
+
+  useEffect(() => {
+    // Récupérer les paramètres de la URL
+    const book = searchParams.get('book');
+    const title = searchParams.get('title');
+    if (book) {
+      setBookFilter(book);
+      setBookTitle(title ? decodeURIComponent(title) : book);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -88,38 +103,8 @@ export default function MapComponent() {
             minZoom: 6,
           }).addTo(map.current);
 
-          fetch(`${API_URL}/api/users-cities`)
-            .then((res) => {
-              if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
-              }
-              return res.json();
-            })
-            .then((users) => {
-              const byCity = {};
-
-              users.forEach((user) => {
-                if (!user.Villes) return;
-                if (!byCity[user.Villes]) byCity[user.Villes] = [];
-                byCity[user.Villes].push(user);
-              });
-
-              setUsersByCity(byCity);
-
-              // Ajouter les markers uniquement si la carte existe encore
-              if (map.current) {
-                Object.keys(byCity).forEach((city) => {
-                  const coords = CITY_COORDS[city];
-                  if (!coords) return;
-
-                  const marker = L.marker(coords).addTo(map.current);
-
-                  marker.on('click', () => {
-                    setSelectedCity(city);
-                  });
-                });
-              }
-            });
+          // Indiquer que la carte est prête
+          setMapReady(true);
         }
       })
       .catch((err) => {
@@ -135,6 +120,72 @@ export default function MapComponent() {
       }
     };
   }, []);
+
+  // Charger les utilisateurs quand la carte est prête ou quand le filtre change
+  useEffect(() => {
+    if (!mapReady || !map.current) return;
+
+    const token = localStorage.getItem('token');
+
+    // Nettoyer les markers existants
+    map.current.eachLayer((layer) => {
+      if (layer instanceof L.Marker) {
+        map.current.removeLayer(layer);
+      }
+    });
+
+    fetch(`${API_URL}/api/users-cities`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((users) => {
+        let filteredUsers = users;
+        
+        // Filtrer les utilisateurs qui ont le livre si un filtre est actif
+        if (bookFilter) {
+          filteredUsers = users.filter((user) => {
+            if (!user.bibliotheque_personnelle) return false;
+            return user.bibliotheque_personnelle.some(
+              (livre) => livre.source_id === bookFilter
+            );
+          });
+        }
+
+        const byCity = {};
+
+        filteredUsers.forEach((user) => {
+          if (!user.Villes) return;
+          if (!byCity[user.Villes]) byCity[user.Villes] = [];
+          byCity[user.Villes].push(user);
+        });
+
+        setUsersByCity(byCity);
+
+        // Ajouter les nouveaux markers
+        if (map.current) {
+          Object.keys(byCity).forEach((city) => {
+            const coords = CITY_COORDS[city];
+            if (!coords) return;
+
+            const marker = L.marker(coords).addTo(map.current);
+
+            marker.on('click', () => {
+              setSelectedCity(city);
+            });
+          });
+        }
+      })
+      .catch((err) => {
+        console.error('Erreur lors du chargement:', err);
+      });
+  }, [mapReady, bookFilter]);
 
   const handleProposeExchange = async (user) => {
     try {
@@ -190,7 +241,7 @@ export default function MapComponent() {
       </div>
 
       {/* ---------- Liste des utilisateurs ---------- */}
-      {selectedCity && usersByCity[selectedCity] && (
+      {selectedCity && usersByCity[selectedCity] && usersByCity[selectedCity].length > 0 ? (
         <div
           style={{
             marginTop: '30px',
@@ -259,7 +310,22 @@ export default function MapComponent() {
             ))}
           </ul>
         </div>
-      )}
+      ) : bookTitle && selectedCity ? (
+        <div
+          style={{
+            marginTop: '30px',
+            padding: '20px',
+            borderRadius: '10px',
+            backgroundColor: '#fff3cd',
+            border: '1px solid #ffc107',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+          }}
+        >
+          <p style={{ margin: 0, color: '#856404', fontWeight: '500' }}>
+            ⚠️ Aucun utilisateur à {selectedCity} n'a "{bookTitle}" dans sa bibliothèque personnelle.
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
