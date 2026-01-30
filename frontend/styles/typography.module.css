@@ -1,4 +1,4 @@
-/* Typography */
+
 .title {
   font-size: 2.5rem;
   color: var(--color-text);
@@ -71,7 +71,7 @@
   font-size: 1.05rem;
 }
 
-/* Hero Section */
+
 .heroTitle {
   font-size: 3rem;
   color: var(--color-secondary);

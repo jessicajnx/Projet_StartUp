@@ -1,4 +1,4 @@
-/* Layout containers */
+
 .container {
   display: flex;
   flex-direction: column;
@@ -29,7 +29,7 @@
   margin: 0 auto;
 }
 
-/* Flexbox utilities */
+
 .flexCenter {
   display: flex;
   align-items: center;

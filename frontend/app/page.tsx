@@ -27,14 +27,15 @@ export default function Home() {
       <main className={styles.main}>
         {isLoggedIn ? (
           <>
-            {/* Hero Section - Logged In */}
+            {}
             <section className={styles.heroConnected}>
               <div className={styles.heroContent}>
                 <div className={styles.heroImagePlaceholder}>
-                  <svg width="200" height="200" viewBox="0 0 200 200" fill="none">
-                    <circle cx="100" cy="60" r="30" fill="#D4B59E" />
-                    <path d="M50 150 L100 100 L150 150 Z" fill="#8B7355" />
-                  </svg>
+                  <img
+                    src="/images/person-reading.jpg"
+                    alt="Personne lisant un livre"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '20px' }}
+                  />
                 </div>
                 <div className={styles.heroText}>
                   <h1 className={typographyStyles.heroTitle}>Prêt à échanger ?</h1>
@@ -51,7 +52,7 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Features Cards */}
+            {}
             <section className={styles.featuresSection}>
               <div className={gridStyles.featuresGrid}>
                 <div className={cardStyles.featureCard}>
@@ -80,7 +81,7 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Second Section */}
+            {}
             <section className={styles.aboutSectionConnected}>
               <div className={styles.aboutContent}>
                 <div className={styles.aboutText}>
@@ -89,15 +90,16 @@ export default function Home() {
                   </p>
                 </div>
                 <div className={styles.aboutImagePlaceholder}>
-                  <svg width="200" height="200" viewBox="0 0 200 200" fill="none">
-                    <circle cx="100" cy="60" r="30" fill="#D4B59E" />
-                    <path d="M50 150 L100 100 L150 150 Z" fill="#8B7355" />
-                  </svg>
+                  <img
+                    src="/images/books-stack.jpg"
+                    alt="Pile de livres"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '20px' }}
+                  />
                 </div>
               </div>
             </section>
 
-            {/* Testimonials Section */}
+            {}
             <section className={styles.testimonialsSection}>
               <h2 className={typographyStyles.sectionTitle}>Ils adorent ....</h2>
               <div className={gridStyles.featuresGrid}>
@@ -133,7 +135,7 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Statistics Section */}
+            {}
             <section className={styles.statsSection}>
               <div className={gridStyles.featuresGrid}>
                 <div className={styles.statCard}>
@@ -153,7 +155,7 @@ export default function Home() {
           </>
         ) : (
           <>
-            {/* Hero Section - Not Logged In */}
+            {}
             <section className={styles.hero}>
               <div className={styles.heroContent}>
                 <div className={styles.heroImagePlaceholder}>
@@ -179,7 +181,7 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Features Cards */}
+            {}
             <section className={styles.featuresSection}>
               <div className={gridStyles.featuresGrid}>
                 <div className={cardStyles.featureCard}>
@@ -208,7 +210,7 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Second Section */}
+            {}
             <section className={styles.aboutSectionConnected}>
               <div className={styles.aboutContent}>
                 <div className={styles.aboutText}>
@@ -217,15 +219,16 @@ export default function Home() {
                   </p>
                 </div>
                 <div className={styles.aboutImagePlaceholder}>
-                  <svg width="200" height="200" viewBox="0 0 200 200" fill="none">
-                    <circle cx="100" cy="60" r="30" fill="#D4B59E" />
-                    <path d="M50 150 L100 100 L150 150 Z" fill="#8B7355" />
-                  </svg>
+                  <img
+                    src="/images/books-stack.jpg"
+                    alt="Pile de livres"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '20px' }}
+                  />
                 </div>
               </div>
             </section>
 
-            {/* Testimonials Section */}
+            {}
             <section className={styles.testimonialsSection}>
               <h2 className={typographyStyles.sectionTitle}>Ils adorent ....</h2>
               <div className={gridStyles.featuresGrid}>
@@ -261,7 +264,7 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Statistics Section */}
+            {}
             <section className={styles.statsSection}>
               <div className={gridStyles.featuresGrid}>
                 <div className={styles.statCard}>

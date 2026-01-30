@@ -24,7 +24,6 @@ class User(Base):
     role = Column("Role", String(20), nullable=False, default="Pauvre")
     villes = Column("Villes", String(100))
     mdp = Column("MDP", String(255), nullable=False)
-    # MySQL index length limit (utf8mb4): keep indexed email below 191 chars
     email = Column("Email", String(191), unique=True, nullable=False, index=True)
     age = Column("Age", Integer)
     signalement = Column("Signalement", Integer, default=0)
@@ -77,6 +76,5 @@ class Message(Base):
     is_read = Column("IsRead", Integer, default=0)
     message_metadata = Column("MessageMetadata", JSON, nullable=True)
 
-    # Relations
     emprunt = relationship("Emprunt", back_populates="messages")
     sender = relationship("User", foreign_keys=[id_sender], backref="sent_messages")

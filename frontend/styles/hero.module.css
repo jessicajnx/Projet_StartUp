@@ -1,4 +1,4 @@
-/* Hero Section */
+
 .container {
   display: flex;
   flex-direction: column;
@@ -42,7 +42,7 @@
   gap: 1.5rem;
 }
 
-/* Features Section */
+
 .featuresSection {
   padding: 4rem 2rem;
   background-color: var(--color-background);
@@ -60,7 +60,7 @@
   color: white;
 }
 
-/* About Section Connected */
+
 .aboutSectionConnected {
   padding: 4rem 2rem;
   background-color: white;
@@ -92,7 +92,7 @@
   border: 2px solid var(--color-border);
 }
 
-/* Testimonials Section */
+
 .testimonialsSection {
   padding: 4rem 2rem;
   background-color: var(--color-background);
@@ -110,7 +110,7 @@
   margin-top: 1rem;
 }
 
-/* Statistics Section */
+
 .statsSection {
   padding: 4rem 2rem;
   background-color: white;
@@ -138,7 +138,7 @@
   border-color: var(--color-primary);
 }
 
-/* Old styles kept for backward compatibility */
+
 .aboutSection {
   max-width: 800px;
   margin: 0 auto;

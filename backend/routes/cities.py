@@ -12,9 +12,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 @router.get("/me/city")
 def get_my_city(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    """
-    Retourne la ville de l'utilisateur connecté (via JWT).
-    """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
@@ -32,17 +29,10 @@ def get_my_city(token: str = Depends(oauth2_scheme), db: Session = Depends(get_d
 
 @router.get("/users-cities")
 def get_users_cities(db: Session = Depends(get_db)):
-    """
-    Retourne la liste des utilisateurs avec leurs villes et leurs livres pour la carte.
-    Exclut l'utilisateur système Assistant Livre2Main.
-    """
-    # Exclure l'Assistant de la liste
     users = db.query(User).filter(User.email != "assistant@livre2main.com").all()
 
-    # Formater la réponse pour correspondre au format attendu par le frontend
     result = []
     for user in users:
-        # Récupérer les livres de la bibliothèque personnelle
         personal_books = []
         for book in user.personal_books:
             personal_books.append({
@@ -52,7 +42,7 @@ def get_users_cities(db: Session = Depends(get_db)):
                 "authors": book.authors,
                 "cover_url": book.cover_url,
             })
-        
+
         result.append({
             "ID": user.id,
             "Name": user.name,

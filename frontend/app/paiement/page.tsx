@@ -25,7 +25,7 @@ export default function PaiementPage() {
     cvv: '',
   });
 
-  // Vérifier l'authentification et obtenir le token de paiement
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -34,7 +34,7 @@ export default function PaiementPage() {
     }
     setIsAuthenticated(true);
 
-    // Demander un token de paiement au backend
+
     const requestPaymentToken = async () => {
       try {
         const response = await fetch('http://localhost:8000/users/request-payment-token', {
@@ -64,14 +64,14 @@ export default function PaiementPage() {
     requestPaymentToken();
   }, [router]);
 
-  // Formater le numéro de carte (4 chiffres espacés)
+
   const formatCardNumber = (value: string) => {
     const numbers = value.replace(/\D/g, '');
     const groups = numbers.match(/.{1,4}/g);
     return groups ? groups.join(' ') : numbers;
   };
 
-  // Formater la date d'expiration (MM/YYYY)
+
   const formatExpiryDate = (value: string) => {
     const numbers = value.replace(/\D/g, '');
     if (numbers.length >= 2) {
@@ -99,7 +99,7 @@ export default function PaiementPage() {
 
     setFormData({ ...formData, [name]: formattedValue });
 
-    // Clear error when user types
+
     if (errors[name as keyof typeof errors]) {
       setErrors({ ...errors, [name]: '' });
     }
@@ -115,20 +115,20 @@ export default function PaiementPage() {
 
     let isValid = true;
 
-    // Valider le numéro de carte (16 chiffres)
+
     const cardNumberClean = formData.cardNumber.replace(/\s/g, '');
     if (!cardNumberClean || cardNumberClean.length !== 16) {
       newErrors.cardNumber = 'Le numéro de carte doit contenir 16 chiffres';
       isValid = false;
     }
 
-    // Valider le nom du titulaire
+
     if (!formData.cardName.trim()) {
       newErrors.cardName = 'Le nom du titulaire est requis';
       isValid = false;
     }
 
-    // Valider la date d'expiration
+
     if (!formData.expiryDate || formData.expiryDate.length !== 7) {
       newErrors.expiryDate = 'Format: MM/YYYY';
       isValid = false;
@@ -146,7 +146,7 @@ export default function PaiementPage() {
       }
     }
 
-    // Valider le CVV (3 chiffres)
+
     if (!formData.cvv || formData.cvv.length !== 3) {
       newErrors.cvv = 'Le CVV doit contenir 3 chiffres';
       isValid = false;
@@ -166,17 +166,17 @@ export default function PaiementPage() {
     setIsProcessing(true);
 
     try {
-      // Vérifier que le token de paiement est disponible
+
       if (!paymentToken) {
         alert('Token de paiement manquant. Veuillez réessayer.');
         setIsProcessing(false);
         return;
       }
 
-      // Simuler un délai de traitement du paiement
+
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Upgrade à Premium avec le token de paiement sécurisé
+
       const token = localStorage.getItem('token');
       console.log('Envoi de la requête d\'upgrade premium avec token de paiement...');
 
@@ -198,10 +198,10 @@ export default function PaiementPage() {
         console.log('Utilisateur mis à jour:', updatedUser);
         console.log('Nouveau rôle:', updatedUser.role);
 
-        // Afficher l'animation de succès
+
         setShowSuccessAnimation(true);
 
-        // Rediriger après l'animation (3 secondes)
+
         setTimeout(() => {
           window.location.href = '/profil';
         }, 3000);
@@ -224,7 +224,7 @@ export default function PaiementPage() {
 
   return (
     <div style={styles.pageContainer}>
-      {/* Animations CSS */}
+      {}
       <style jsx>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -271,7 +271,7 @@ export default function PaiementPage() {
 
       <Header />
 
-      {/* Animation de succès */}
+      {}
       {showSuccessAnimation && (
         <div style={styles.successOverlay}>
           <div style={styles.successAnimation}>
@@ -292,14 +292,14 @@ export default function PaiementPage() {
           <h1 style={styles.title}>Paiement sécurisé</h1>
 
           <div style={styles.contentGrid}>
-            {/* Formulaire de paiement */}
+            {}
             <div style={styles.paymentCard}>
               <div style={styles.lockIcon}>🔒</div>
               <h2 style={styles.cardTitle}>Informations de paiement</h2>
               <p style={styles.securityText}>Vos données sont sécurisées et cryptées</p>
 
               <form onSubmit={handleSubmit} style={styles.form}>
-                {/* Numéro de carte */}
+                {}
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Numéro de carte</label>
                   <div style={styles.inputWrapper}>
@@ -316,7 +316,7 @@ export default function PaiementPage() {
                   {errors.cardNumber && <span style={styles.error}>{errors.cardNumber}</span>}
                 </div>
 
-                {/* Nom du titulaire */}
+                {}
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Nom du titulaire</label>
                   <input
@@ -330,7 +330,7 @@ export default function PaiementPage() {
                   {errors.cardName && <span style={styles.error}>{errors.cardName}</span>}
                 </div>
 
-                {/* Date d'expiration et CVV */}
+                {}
                 <div style={styles.rowGroup}>
                   <div style={styles.formGroup}>
                     <label style={styles.label}>Date d'expiration</label>
@@ -377,7 +377,7 @@ export default function PaiementPage() {
               </div>
             </div>
 
-            {/* Récapitulatif de la commande */}
+            {}
             <div style={styles.summaryCard}>
               <h3 style={styles.summaryTitle}>Récapitulatif</h3>
 

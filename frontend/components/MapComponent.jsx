@@ -90,7 +90,7 @@ export default function MapComponent() {
           if (coords) centerCoords = coords;
         }
 
-        if (mapContainer.current) {
+        if (mapContainer.current && !mapContainer.current._leaflet_id) {
           map.current = L.map(mapContainer.current).setView(centerCoords, 12);
 
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -117,6 +117,9 @@ export default function MapComponent() {
       if (map.current) {
         map.current.remove();
         map.current = null;
+      }
+      if (mapContainer.current && mapContainer.current._leaflet_id) {
+        delete mapContainer.current._leaflet_id;
       }
     };
   }, []);

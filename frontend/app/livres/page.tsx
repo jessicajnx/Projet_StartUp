@@ -180,7 +180,7 @@ export default function Livres() {
       const isAdded = addedIds.has(book.id);
 
       if (isAdded) {
-        // Retirer le livre
+
         const dbId = bookIdMap.get(book.id);
         if (dbId) {
           await biblioAPI.delete(dbId);
@@ -196,7 +196,7 @@ export default function Livres() {
           });
         }
       } else {
-        // Ajouter le livre
+
         const res = await biblioAPI.add({
           title: book.title,
           authors: book.authors,
@@ -208,7 +208,7 @@ export default function Livres() {
         });
 
         setAddedIds(prev => new Set(prev).add(book.id));
-        // Stocker l'ID de la BDD pour pouvoir supprimer plus tard
+
         if (res.data?.id) {
           setBookIdMap((prev) => new Map(prev).set(book.id, res.data.id));
         }

@@ -93,7 +93,7 @@ export default function BibliothequePage() {
             </p>
           </div>
 
-          {/* Barre de recherche */}
+          {}
           <form onSubmit={handleSearch} className={formStyles.searchBar}>
             <input
               type="text"
@@ -152,7 +152,7 @@ export default function BibliothequePage() {
                 </p>
               )}
 
-              {/* Pagination */}
+              {}
               {!searchQuery && totalPages > 1 && (
                 <div className={paginationStyles.pagination}>
                   <button

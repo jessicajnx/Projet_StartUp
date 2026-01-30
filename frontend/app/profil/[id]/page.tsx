@@ -29,7 +29,7 @@ export default function UserProfilPage() {
   const searchParams = useSearchParams();
   const userId = params?.id as string;
   
-  // Détecter si on vient depuis un échange
+
   const fromExchange = searchParams?.get('from') === 'exchange';
   const messageId = searchParams?.get('messageId');
 
@@ -60,7 +60,7 @@ export default function UserProfilPage() {
       const token = localStorage.getItem('token');
       const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
-      // Charger les informations de l'utilisateur
+
       const userResponse = await fetch(`${API_URL}/users/profile/${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -74,7 +74,7 @@ export default function UserProfilPage() {
       const userData = await userResponse.json();
       setUser(userData);
 
-      // Charger la bibliothèque de l'utilisateur
+
       const livresResponse = await fetch(`${API_URL}/bibliotheque-personnelle/user/${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,

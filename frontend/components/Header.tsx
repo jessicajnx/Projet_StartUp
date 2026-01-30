@@ -17,7 +17,6 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
   const [userId, setUserId] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Vérifier l'état d'authentification à chaque changement de route
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem('token');
@@ -29,13 +28,11 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
     };
     
     checkAuth();
-    
-    // Écouter les changements dans localStorage
+
     window.addEventListener('storage', checkAuth);
     return () => window.removeEventListener('storage', checkAuth);
   }, [pathname]);
 
-  // Récupérer le nombre de conversations non lues
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -58,10 +55,8 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
       }
     };
 
-    // Récupérer au chargement
     fetchUnreadCount();
 
-    // Actualiser toutes les 5 secondes
     const interval = setInterval(fetchUnreadCount, 5000);
     
     return () => clearInterval(interval);

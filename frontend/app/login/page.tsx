@@ -10,7 +10,7 @@ import cardStyles from "@/styles/cards.module.css";
 import formStyles from "@/styles/forms.module.css";
 import buttonStyles from "@/styles/buttons.module.css";
 
-// Fonction pour décoder un JWT basique
+
 function decodeToken(token: string) {
   try {
     const base64Url = token.split(".")[1];
@@ -44,7 +44,7 @@ export default function Login() {
       if (typeof window !== "undefined" && token) {
         localStorage.setItem("token", token);
         
-        // Récupérer les informations de l'utilisateur
+
         const userRes = await userAPI.getMe();
         const userName = userRes.data?.name;
         const userId = userRes.data?.id ?? userRes.data?.ID;
@@ -55,11 +55,11 @@ export default function Login() {
           localStorage.setItem("userId", String(userId));
         }
         
-        // Décoder le token pour récupérer le rôle
+
         const decoded = decodeToken(token);
         const userRole = decoded?.role;
         
-        // Rediriger en fonction du rôle
+
         if (userRole === "Admin") {
           router.push("/admin");
         } else {
@@ -74,7 +74,7 @@ export default function Login() {
         if (typeof errorDetail === 'string') {
           errorMsg = errorDetail;
         } else if (Array.isArray(errorDetail)) {
-          // Erreur de validation Pydantic (array d'objets)
+
           errorMsg = errorDetail.map((e: any) => e.msg || JSON.stringify(e)).join(', ');
         } else {
           errorMsg = JSON.stringify(errorDetail);

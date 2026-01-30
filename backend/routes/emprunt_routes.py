@@ -13,32 +13,20 @@ router = APIRouter(prefix="/emprunts", tags=["Emprunts"])
 
 
 def check_conversation_limit(user: User, db: Session) -> None:
-    """
-    Vérifie si l'utilisateur a atteint sa limite d'échanges RÉELS.
-    Les utilisateurs avec le rôle 'Pauvre' sont limités à 1 échange actif à la fois.
-    Les utilisateurs 'Premium' ou 'Riche' n'ont pas de limite.
-    Les conversations avec l'Assistant (propositions) ne comptent PAS dans la limite.
-    Seuls les échanges RÉELS entre deux utilisateurs comptent.
-    """
-    # Si l'utilisateur est premium ou riche, pas de limite
     if user.role.lower() in ["premium", "riche"]:
         return
-    
-    # Pour les utilisateurs 'Pauvre', vérifier le nombre d'échanges RÉELS actifs
+
     if user.role.lower() == "pauvre":
-        # Récupérer l'ID de l'Assistant
         assistant = db.query(User).filter(User.email == "assistant@livre2main.com").first()
         assistant_id = assistant.id if assistant else None
-        
-        # Compter UNIQUEMENT les échanges RÉELS (sans l'Assistant)
+
         query = db.query(Emprunt).filter(
             or_(
                 Emprunt.id_user1 == user.id,
                 Emprunt.id_user2 == user.id
             )
         )
-        
-        # Exclure toutes les conversations avec l'Assistant
+
         if assistant_id:
             query = query.filter(
                 and_(
@@ -46,16 +34,15 @@ def check_conversation_limit(user: User, db: Session) -> None:
                     Emprunt.id_user2 != assistant_id
                 )
             )
-        
+
         active_exchanges = query.count()
-        
-        # Limite à 1 échange RÉEL pour les utilisateurs pauvres
+
         if active_exchanges >= 1:
             raise HTTPException(
                 status_code=403,
                 detail="Limite d'échanges atteinte. Les utilisateurs gratuits sont limités à 1 échange actif à la fois. Passez à Premium pour des échanges illimités."
             )
-    
+
     return
 
 @router.post("/", response_model=EmpruntSchema, status_code=status.HTTP_201_CREATED)
@@ -70,12 +57,10 @@ def create_emprunt(emprunt: EmpruntCreate, db: Session = Depends(get_db), curren
         raise HTTPException(status_code=404, detail="Livre non trouvé")
     if emprunt.id_user1 == emprunt.id_user2:
         raise HTTPException(status_code=400, detail="Un utilisateur ne peut pas emprunter à lui-même")
-    
-    # Vérifier si c'est un échange RÉEL (sans l'assistant)
+
     assistant = db.query(User).filter(User.email == "assistant@livre2main.com").first()
     is_real_exchange = not assistant or (user1.id != assistant.id and user2.id != assistant.id)
-    
-    # Vérifier la limite UNIQUEMENT si c'est un échange réel
+
     if is_real_exchange:
         check_conversation_limit(user1, db)
         check_conversation_limit(user2, db)
@@ -114,7 +99,7 @@ def delete_emprunt(emprunt_id: int, db: Session = Depends(get_db), current_user:
     emprunt = db.query(Emprunt).filter(Emprunt.id == emprunt_id).first()
     if not emprunt:
         raise HTTPException(status_code=404, detail="Emprunt non trouvé")
-    
+
     db.delete(emprunt)
     db.commit()
     return None
@@ -147,40 +132,30 @@ def propose_exchange(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Propose un échange à un autre utilisateur.
-    Crée automatiquement un emprunt et envoie un message de l'assistant système.
-    """
-
-    # Vérifier que l'utilisateur cible existe
     target_user = db.query(User).filter(User.id == request.target_user_id).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="Utilisateur cible non trouvé")
 
-    # Vérifier qu'on ne propose pas à soi-même
     if request.target_user_id == current_user.id:
         raise HTTPException(status_code=400, detail="Vous ne pouvez pas proposer un échange à vous-même")
 
-    # 1. Créer ou récupérer l'utilisateur système "Assistant Livre2Main"
     assistant_email = "assistant@livre2main.com"
     assistant = db.query(User).filter(User.email == assistant_email).first()
 
     if not assistant:
-        # Créer l'utilisateur assistant
         assistant = User(
             name="Assistant",
             surname="Livre2Main",
             email=assistant_email,
-            mdp="$2b$12$placeholder_hashed_password",  # Mot de passe non utilisable
+            mdp="$2b$12$placeholder_hashed_password",
             role="System",
             villes="Paris",
             age=0,
             signalement=0
         )
         db.add(assistant)
-        db.flush()  # Pour obtenir l'ID
+        db.flush()
 
-    # 2. Créer ou récupérer un livre générique pour les propositions d'échange
     generic_book_name = "Proposition d'échange"
     generic_book = db.query(Livre).filter(Livre.nom == generic_book_name).first()
 
@@ -193,8 +168,6 @@ def propose_exchange(
         db.add(generic_book)
         db.flush()
 
-    # 3. Vérifier si une conversation existe déjà entre l'Assistant et l'utilisateur cible
-    # La conversation avec l'Assistant est toujours : Assistant (user1) <-> Target User (user2)
     existing_emprunt = db.query(Emprunt).filter(
         (
             (Emprunt.id_user1 == assistant.id) & (Emprunt.id_user2 == request.target_user_id)
@@ -204,10 +177,8 @@ def propose_exchange(
     ).filter(Emprunt.id_livre == generic_book.id).first()
 
     if existing_emprunt:
-        # Un emprunt existe déjà, on l'utilise
         emprunt = existing_emprunt
     else:
-        # Créer un nouvel emprunt entre l'Assistant et l'utilisateur cible
         emprunt = Emprunt(
             id_user1=assistant.id,
             id_user2=request.target_user_id,
@@ -217,12 +188,10 @@ def propose_exchange(
         db.add(emprunt)
         db.flush()
 
-    # 4. Créer le message automatique de l'assistant avec les actions
     message_text = (
         f"📚 {current_user.name} {current_user.surname} veut échanger \"{request.book_title}\" avec toi"
     )
 
-    # Métadonnées pour les actions (bouton voir quel livre échanger)
     metadata = {
         "type": "proposal",
         "proposer_id": current_user.id,
@@ -234,19 +203,18 @@ def propose_exchange(
             {"label": "Voir quel livre échanger", "value": "view_library", "style": "primary"},
             {"label": "Refuser", "value": "reject", "style": "danger"}
         ],
-        "status": "pending"  # pending, accepted, rejected
+        "status": "pending"
     }
 
     message = Message(
         id_emprunt=emprunt.id,
-        id_sender=assistant.id,  # Le message est envoyé par l'assistant
+        id_sender=assistant.id,
         message_text=message_text,
         is_read=0,
         message_metadata=metadata
     )
     db.add(message)
 
-    # 5. Commit toutes les modifications
     db.commit()
     db.refresh(emprunt)
 
@@ -268,35 +236,25 @@ def propose_book_exchange(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Propose un échange avec un livre spécifique à un autre utilisateur.
-    L'utilisateur a déjà accepté une première proposition et choisit maintenant un livre spécifique.
-    """
-
-    # Vérifier que l'utilisateur cible existe
     target_user = db.query(User).filter(User.id == request.target_user_id).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="Utilisateur cible non trouvé")
 
-    # Vérifier qu'on ne propose pas à soi-même
     if request.target_user_id == current_user.id:
         raise HTTPException(status_code=400, detail="Vous ne pouvez pas proposer un échange à vous-même")
 
-    # Récupérer l'Assistant
     assistant_email = "assistant@livre2main.com"
     assistant = db.query(User).filter(User.email == assistant_email).first()
 
     if not assistant:
         raise HTTPException(status_code=404, detail="Assistant système non trouvé")
 
-    # Récupérer le livre générique
     generic_book_name = "Proposition d'échange"
     generic_book = db.query(Livre).filter(Livre.nom == generic_book_name).first()
 
     if not generic_book:
         raise HTTPException(status_code=404, detail="Livre générique non trouvé")
 
-    # Vérifier si une conversation existe déjà entre l'Assistant et l'utilisateur cible
     existing_emprunt = db.query(Emprunt).filter(
         (
             (Emprunt.id_user1 == assistant.id) & (Emprunt.id_user2 == request.target_user_id)
@@ -308,7 +266,6 @@ def propose_book_exchange(
     if existing_emprunt:
         emprunt = existing_emprunt
     else:
-        # Créer un nouvel emprunt entre l'Assistant et l'utilisateur cible
         emprunt = Emprunt(
             id_user1=assistant.id,
             id_user2=request.target_user_id,
@@ -318,12 +275,10 @@ def propose_book_exchange(
         db.add(emprunt)
         db.flush()
 
-    # Créer le message de proposition avec le livre spécifique
     message_text = (
         f"📚 {current_user.name} {current_user.surname} souhaite échanger le livre \"{request.book_title}\" avec vous !"
     )
 
-    # Métadonnées pour les actions
     metadata = {
         "type": "book_proposal",
         "proposer_id": current_user.id,

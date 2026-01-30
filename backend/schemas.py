@@ -146,7 +146,7 @@ class MessageCreate(MessageBase):
     pass
 
 class Message(MessageBase):
-    id: int         
+    id: int
     id_sender: int
     datetime: datetime
     is_read: int
@@ -156,12 +156,10 @@ class Message(MessageBase):
         from_attributes = True
 
 class MessageWithSender(Message):
-    """Message avec les informations de l'expéditeur"""
     sender_name: str
     sender_surname: str
 
 class ConversationSummary(BaseModel):
-    """Résumé d'une conversation pour un emprunt"""
     id_emprunt: int
     other_user_id: int
     other_user_name: str

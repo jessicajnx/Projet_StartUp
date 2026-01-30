@@ -47,7 +47,7 @@ def list_my_personal_library(
         .all()
     )
     total_pages = math.ceil(total / page_size) if total > 0 else 1
-    
+
     return PersonalBooksPaginated(
         items=books,
         total=total,
@@ -65,8 +65,6 @@ def get_user_personal_library(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Récupère la bibliothèque personnelle d'un utilisateur par son ID"""
-    # Vérifier que l'utilisateur existe
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")

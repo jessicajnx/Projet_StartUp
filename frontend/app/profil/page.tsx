@@ -231,7 +231,7 @@ export default function ProfilPage() {
     }
   };
 
-  // Pagination
+
   const totalPages = Math.ceil(filteredLivres.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -273,7 +273,7 @@ export default function ProfilPage() {
         <div className={styles.content}>
           <h1 className={styles.pageTitle}>Mon Profil</h1>
           
-          {/* Profile Section */}
+          {}
           <div className={styles.profileSection}>
             <div className={styles.profileHeader}>
               <div className={styles.avatarContainer}>
@@ -307,7 +307,7 @@ export default function ProfilPage() {
             </div>
           </div>
 
-          {/* Books Section */}
+          {}
           <div className={styles.booksSection}>
             <h2 className={styles.sectionTitle}>Mes Livres</h2>
             
@@ -379,7 +379,7 @@ export default function ProfilPage() {
       </main>
       <Footer />
 
-      {/* Edit Modal */}
+      {}
       {isEditing && (
         <div className={styles.modalOverlay} onClick={() => setIsEditing(false)}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>

@@ -14,7 +14,7 @@ export default function AbonnementPage() {
   const [currentRole, setCurrentRole] = useState<string>('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Vérifier l'authentification
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -23,7 +23,7 @@ export default function AbonnementPage() {
     }
     setIsAuthenticated(true);
 
-    // Récupérer le rôle actuel de l'utilisateur
+
     const fetchUserRole = async () => {
       try {
         const response = await fetch('http://localhost:8000/users/me', {
@@ -44,7 +44,7 @@ export default function AbonnementPage() {
     fetchUserRole();
   }, [router]);
 
-  // Compteur de 20h
+
   useEffect(() => {
     const targetDate = new Date();
     targetDate.setHours(targetDate.getHours() + 20);
@@ -69,7 +69,7 @@ export default function AbonnementPage() {
   }, []);
 
   const handleSubscribe = async (plan: 'Pauvre' | 'Premium') => {
-    // Empêcher de souscrire à l'abonnement gratuit
+
     if (plan === 'Pauvre') {
       alert('L\'abonnement gratuit est votre abonnement par défaut. Vous ne pouvez pas y souscrire.');
       return;
@@ -80,12 +80,12 @@ export default function AbonnementPage() {
       return;
     }
 
-    // Rediriger vers la page de paiement pour l'abonnement Premium
+
     router.push('/paiement');
   };
 
-  // Vérifier si l'utilisateur a l'abonnement gratuit
-  // Tous les utilisateurs sauf Premium/Riche sont considérés comme ayant l'abonnement gratuit
+
+
   const hasFreePlan = currentRole.toLowerCase() !== 'riche' && currentRole.toLowerCase() !== 'premium' && currentRole.toLowerCase() !== 'admin';
   const hasPremiumPlan = currentRole.toLowerCase() === 'riche' || currentRole.toLowerCase() === 'premium';
 
@@ -101,7 +101,7 @@ export default function AbonnementPage() {
         <div style={styles.container}>
           <h1 style={styles.title}>Choisissez votre abonnement</h1>
 
-          {/* Bannière de réduction */}
+          {}
           <div style={styles.discountBanner}>
             <div style={styles.discountIcon}>🔥</div>
             <div style={styles.discountContent}>
@@ -126,9 +126,9 @@ export default function AbonnementPage() {
             </div>
           </div>
 
-          {/* Plans d'abonnement */}
+          {}
           <div style={styles.plansContainer}>
-            {/* Plan Gratuit */}
+            {}
             <div style={{...styles.planCard, ...(hasFreePlan ? styles.currentPlan : {})}}>
               {hasFreePlan && (
                 <div style={styles.currentBadge}>✓ Abonnement actuel</div>
@@ -171,7 +171,7 @@ export default function AbonnementPage() {
               </button>
             </div>
 
-            {/* Plan Premium */}
+            {}
             <div style={{...styles.planCard, ...styles.premiumCard, ...(hasPremiumPlan ? styles.currentPlan : {})}}>
               <div style={styles.popularBadge}>⭐ Le plus populaire</div>
               {hasPremiumPlan && (
@@ -223,7 +223,7 @@ export default function AbonnementPage() {
             </div>
           </div>
 
-          {/* Note de bas de page */}
+          {}
           <p style={styles.footnote}>
             💡 Vous pouvez changer d'abonnement à tout moment. Le changement est immédiat.
           </p>

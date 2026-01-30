@@ -48,11 +48,11 @@ def update_livre(livre_id: int, livre_update: LivreUpdate, db: Session = Depends
     livre = db.query(Livre).filter(Livre.id == livre_id).first()
     if not livre:
         raise HTTPException(status_code=404, detail="Livre non trouvé")
-    
+
     update_data = livre_update.dict(exclude_unset=True)
     for key, value in update_data.items():
         setattr(livre, key, value)
-    
+
     db.commit()
     db.refresh(livre)
     return livre
@@ -62,7 +62,7 @@ def delete_livre(livre_id: int, db: Session = Depends(get_db), current_user: Use
     livre = db.query(Livre).filter(Livre.id == livre_id).first()
     if not livre:
         raise HTTPException(status_code=404, detail="Livre non trouvé")
-    
+
     db.delete(livre)
     db.commit()
     return None
@@ -70,8 +70,8 @@ def delete_livre(livre_id: int, db: Session = Depends(get_db), current_user: Use
 @router.get("/search/{query}", response_model=List[LivreSchema])
 def search_livres(query: str, db: Session = Depends(get_db)):
     livres = db.query(Livre).filter(
-        (Livre.nom.like(f"%{query}%")) | 
-        (Livre.auteur.like(f"%{query}%")) | 
+        (Livre.nom.like(f"%{query}%")) |
+        (Livre.auteur.like(f"%{query}%")) |
         (Livre.genre.like(f"%{query}%"))
     ).all()
     return livres
@@ -80,32 +80,32 @@ def search_livres(query: str, db: Session = Depends(get_db)):
 def assign_livre_to_user(livre_id: int, user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     livre = db.query(Livre).filter(Livre.id == livre_id).first()
     user = db.query(User).filter(User.id == user_id).first()
-    
+
     if not livre:
         raise HTTPException(status_code=404, detail="Livre non trouvé")
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-    
+
     if livre not in user.livres:
         user.livres.append(livre)
         db.commit()
         db.refresh(livre)
-    
+
     return livre
 
 @router.delete("/{livre_id}/unassign/{user_id}", response_model=LivreSchema)
 def unassign_livre_from_user(livre_id: int, user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     livre = db.query(Livre).filter(Livre.id == livre_id).first()
     user = db.query(User).filter(User.id == user_id).first()
-    
+
     if not livre:
         raise HTTPException(status_code=404, detail="Livre non trouvé")
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-    
+
     if livre in user.livres:
         user.livres.remove(livre)
         db.commit()
         db.refresh(livre)
-    
+
     return livre

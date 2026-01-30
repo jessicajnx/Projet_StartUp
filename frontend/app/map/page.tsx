@@ -15,7 +15,7 @@ function MapContent() {
 
   return (
     <>
-      {/* Header simple */}
+      {}
       <div className="bg-white shadow-md p-4 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">
           {bookTitle ? `Emprunter: ${decodeURIComponent(bookTitle)}` : 'Carte'}
@@ -27,7 +27,7 @@ function MapContent() {
         </Link>
       </div>
 
-      {/* Carte plein écran */}
+      {}
       <div className="flex-1 overflow-hidden">
         <Map />
       </div>

@@ -37,7 +37,7 @@ export default function RechercheLivre() {
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMoreBooks, setHasMoreBooks] = useState(true);
 
-  // Charger les livres populaires au démarrage
+
   useEffect(() => {
     loadPopularBooks(0);
   }, []);
@@ -78,14 +78,14 @@ export default function RechercheLivre() {
           };
         });
         
-        // Toujours remplacer les livres
+
         setPopularBooks(parsed);
         
-        // Vérifier s'il y a plus de livres (si on reçoit moins de 40, c'est probablement la fin)
+
         setHasMoreBooks(parsed.length >= 40);
         setCurrentPage(page);
       } else {
-        // Si pas de réponse, on arrête
+
         setHasMoreBooks(false);
       }
     } catch (err) {
@@ -111,14 +111,14 @@ export default function RechercheLivre() {
     if (!token) {
       router.replace("/login");
     }
-    // Précharge les livres déjà ajoutés pour marquer les boutons
+
     (async () => {
       try {
         const res = await biblioAPI.listMe();
         const ids = new Set<string>((res.data || []).map((b: any) => b.source_id).filter(Boolean));
         setAddedIds(ids);
       } catch (e) {
-        // silencieux : si non auth, on redirige déjà
+
       }
     })();
   }, [router]);
@@ -296,7 +296,7 @@ export default function RechercheLivre() {
           {saveMessage && <p style={styles.info}>{saveMessage}</p>}
         </section>
 
-        {/* Section Livres Populaires */}
+        {}
         {!hasTyped && (
           <section style={styles.popularSection}>
             <h2 style={styles.popularTitle}>Livres populaires</h2>

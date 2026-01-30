@@ -39,7 +39,7 @@ export default function MessageriePage() {
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  /** Vérifie le token et charge les données */
+  
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -52,11 +52,11 @@ export default function MessageriePage() {
 
   const loadData = async () => {
     try {
-      // Récupérer l'utilisateur connecté
+
       const userResponse = await userAPI.getMe();
       setCurrentUser(userResponse.data);
 
-      // Récupérer les conversations
+
       const convResponse = await messageAPI.getConversations();
       const mappedConversations: Conversation[] = convResponse.data.map((conv: any) => ({
         id: conv.id_emprunt,
@@ -75,13 +75,13 @@ export default function MessageriePage() {
     }
   };
 
-  /** Sélection d’une conversation et chargement des messages */
+  
   const handleSelectConversation = async (convId: number) => {
     if (!currentUser) return;
     setSelectedConversation(convId);
 
     try {
-      // ⚡ Appel vers la bonne route FastAPI
+
       const response = await messageAPI.getMessagesForEmprunt(convId);
 
       const mappedMessages: Message[] = response.data
@@ -100,7 +100,7 @@ export default function MessageriePage() {
 
       setMessages(mappedMessages);
 
-      // Mettre à jour les conversations pour enlever le badge "non lu"
+
       setConversations(prev =>
         prev.map(conv =>
           conv.id === convId ? { ...conv, unread: false } : conv
@@ -112,7 +112,7 @@ export default function MessageriePage() {
     }
   };
 
-  /** Envoi d'un message */
+  
   const handleSendMessage = async () => {
     if (!newMessage.trim() || selectedConversation === null) return;
 
@@ -136,7 +136,7 @@ export default function MessageriePage() {
       setMessages(prev => [...prev, newMsg]);
       setNewMessage('');
 
-      // Mettre à jour le dernier message dans la liste des conversations
+
       setConversations(prev =>
         prev.map(conv =>
           conv.id === selectedConversation
@@ -150,10 +150,10 @@ export default function MessageriePage() {
     }
   };
 
-  /** Répondre à une proposition */
+  
   const handleProposalResponse = async (messageId: number, response: 'accept' | 'reject' | 'view_library', proposerId?: number) => {
     try {
-      // Si l'utilisateur veut voir la bibliothèque, rediriger directement
+
       if (response === 'view_library' && proposerId) {
         router.push(`/profil/${proposerId}?from=exchange&messageId=${messageId}`);
         return;
@@ -176,12 +176,12 @@ export default function MessageriePage() {
 
       const data = await res.json();
 
-      // Recharger les messages pour voir la mise à jour
+
       if (selectedConversation) {
         await handleSelectConversation(selectedConversation);
       }
 
-      // Si accepté, rediriger vers le profil
+
       if (response === 'accept' && data.redirect_to_profile) {
         router.push(`/profil/${data.redirect_to_profile}`);
       } else {
@@ -193,7 +193,7 @@ export default function MessageriePage() {
     }
   };
 
-  /** Scroll automatique vers le bas */
+  
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -210,7 +210,7 @@ export default function MessageriePage() {
           <h1 style={styles.title}>Messagerie</h1>
           <div style={styles.messagerieContainer}>
             
-            {/* Liste des conversations */}
+            {}
             <div style={styles.conversationsList}>
               <div style={styles.conversationsHeader}>
                 <h2>Conversations</h2>
@@ -248,7 +248,7 @@ export default function MessageriePage() {
               )}
             </div>
 
-            {/* Zone de messages */}
+            {}
             <div style={styles.messagesArea}>
               {selectedConversation === null ? (
                 <div style={styles.noConversationSelected}>
@@ -296,7 +296,7 @@ export default function MessageriePage() {
                             )}
                             <div>{msg.text}</div>
 
-                            {/* Boutons d'action pour les propositions */}
+                            {}
                             {msg.metadata?.actions && msg.metadata?.status === 'pending' && msg.sender === 'other' && (
                               <div style={styles.actionButtons}>
                                 {msg.metadata.actions.map((action: any, index: number) => (
@@ -316,7 +316,7 @@ export default function MessageriePage() {
                               </div>
                             )}
 
-                            {/* Afficher le statut si la proposition a été traitée */}
+                            {}
                             {msg.metadata?.status && msg.metadata?.status !== 'pending' && (
                               <div style={styles.proposalStatus}>
                                 {msg.metadata.status === 'accepted' ? '✅ Acceptée' : '❌ Refusée'}

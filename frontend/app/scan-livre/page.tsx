@@ -43,13 +43,13 @@ export default function ScanLivrePage() {
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Vérifier que c'est une image
+
       if (!file.type.startsWith('image/')) {
         setError('Veuillez sélectionner une image');
         return;
       }
 
-      // Créer une prévisualisation
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelectedImage(reader.result as string);
@@ -110,7 +110,7 @@ export default function ScanLivrePage() {
       });
 
       alert('Livre ajouté à votre bibliothèque !');
-      // Retirer le livre de la liste après ajout
+
       setDetectedBooks(detectedBooks.filter((_, i) => i !== index));
       if (editingIndex === index) {
         setEditingIndex(null);
@@ -178,7 +178,7 @@ export default function ScanLivrePage() {
         return;
       }
 
-      // Créer une prévisualisation
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelectedImage(reader.result as string);
@@ -187,7 +187,7 @@ export default function ScanLivrePage() {
       };
       reader.readAsDataURL(file);
 
-      // Mettre à jour le input file
+
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
       if (fileInputRef.current) {
@@ -212,7 +212,7 @@ export default function ScanLivrePage() {
           </p>
 
           <div style={styles.scanContainer}>
-            {/* Zone d'upload */}
+            {}
             <div style={styles.uploadSection}>
               <input
                 ref={fileInputRef}
@@ -259,7 +259,7 @@ export default function ScanLivrePage() {
               )}
             </div>
 
-            {/* Résultats */}
+            {}
             {detectedBooks.length > 0 && (
               <div style={styles.resultsSection}>
                 <h2 style={styles.resultsTitle}>
@@ -356,7 +356,7 @@ export default function ScanLivrePage() {
             )}
           </div>
 
-          {/* Instructions */}
+          {}
           <div style={styles.instructions}>
             <h3>Conseils pour une meilleure détection</h3>
             <ul style={styles.instructionsList}>
