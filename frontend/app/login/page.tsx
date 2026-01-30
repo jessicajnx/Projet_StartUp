@@ -43,8 +43,12 @@ export default function Login() {
         // Récupérer les informations de l'utilisateur
         const userRes = await userAPI.getMe();
         const userName = userRes.data?.name;
+        const userId = userRes.data?.id ?? userRes.data?.ID;
         if (userName) {
           localStorage.setItem("userName", userName);
+        }
+        if (userId !== undefined && userId !== null) {
+          localStorage.setItem("userId", String(userId));
         }
         
         // Décoder le token pour récupérer le rôle

@@ -14,6 +14,7 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
   const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState('');
+  const [userId, setUserId] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Vérifier l'état d'authentification à chaque changement de route
@@ -21,8 +22,10 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
     const checkAuth = () => {
       const token = localStorage.getItem('token');
       const name = localStorage.getItem('userName');
+      const id = localStorage.getItem('userId');
       setIsAuthenticated(!!token);
       if (name) setUserName(name);
+      if (id) setUserId(id);
     };
     
     checkAuth();
@@ -69,6 +72,7 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
     localStorage.removeItem('userName');
     localStorage.removeItem('userId');
     setIsAuthenticated(false);
+    setUserId('');
     router.push('/');
   };
 
@@ -80,6 +84,8 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
       router.push('/');
     }
   };
+
+  const profileHref = '/profil';
 
   return (
     <header style={styles.header}>
@@ -95,7 +101,7 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
           <nav style={styles.nav}>
             {isAdminPage ? (
               <>
-                <Link href="/profil" style={styles.link}>
+                <Link href={profileHref} style={styles.link}>
                   Profil
                 </Link>
                 <Link href="/admin" style={styles.link}>
@@ -107,7 +113,7 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
               </>
             ) : isAuthenticated ? (
               <>
-                <Link href="/profil" style={styles.link}>
+                <Link href={profileHref} style={styles.link}>
                   Profil
                 </Link>
                 <Link href="/livres" style={styles.link}>
