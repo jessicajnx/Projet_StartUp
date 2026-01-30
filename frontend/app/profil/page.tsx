@@ -94,7 +94,7 @@ export default function ProfilPage() {
           confirmPassword: '',
         });
 
-        const livresResponse = await fetch(`${API_URL}/bibliotheque-personnelle/me?page=1&page_size=100`, {
+        const livresResponse = await fetch(`${API_URL}/bibliotheque-personnelle/me?page=1&page_size=10000`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -102,9 +102,14 @@ export default function ProfilPage() {
 
         if (livresResponse.ok) {
           const livresData = await livresResponse.json();
+          console.log('Données reçues de l\'API:', livresData);
+          console.log('Total de livres:', livresData.total);
+          console.log('Nombre de livres dans items:', livresData.items?.length);
           const booksData = livresData.items || [];
           setLivres(booksData);
           setFilteredLivres(booksData);
+        } else {
+          console.error('Erreur lors du chargement des livres:', await livresResponse.text());
         }
 
         setIsLoading(false);
@@ -369,9 +374,25 @@ export default function ProfilPage() {
                   ))}
                 </div>
 
-                <div className={paginationStyles.pagination}>
-                  <span className={paginationStyles.pageInfo}>{currentPage} / {totalPages}</span>
-                </div>
+                {totalPages > 1 && (
+                  <div className={paginationStyles.pagination}>
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className={paginationStyles.pageButton}
+                    >
+                      Précédent
+                    </button>
+                    <span className={paginationStyles.pageInfo}>{currentPage} / {totalPages}</span>
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className={paginationStyles.pageButton}
+                    >
+                      Suivant
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>
