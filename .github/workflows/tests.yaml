@@ -24,10 +24,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      - name: 🧪 Run tests (unit + integration)
+      - name: 🧪 Run tests
+        working-directory: backend
         env:
-            SECRET_KEY: test-secret-key
-            ALGORITHM: HS256
-            ACCESS_TOKEN_EXPIRE_MINUTES: 30
+          PYTHONPATH: .
+          SECRET_KEY: test-secret-key
+          ALGORITHM: HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES: 30
         run: |
-            pytest -v -m "unit or integration" backend/tests
+          pytest -v -m "unit or integration"
+
