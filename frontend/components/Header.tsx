@@ -14,6 +14,7 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
   const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Vérifier l'état d'authentification à chaque changement de route
   useEffect(() => {
@@ -30,6 +31,38 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
     window.addEventListener('storage', checkAuth);
     return () => window.removeEventListener('storage', checkAuth);
   }, [pathname]);
+
+  // Récupérer le nombre de conversations non lues
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:8000/messages/conversations', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const conversations = await response.json();
+          const total = conversations.reduce((sum: number, conv: any) => sum + (conv.unread_count || 0), 0);
+          setUnreadCount(total);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des conversations:', error);
+      }
+    };
+
+    // Récupérer au chargement
+    fetchUnreadCount();
+
+    // Actualiser toutes les 5 secondes
+    const interval = setInterval(fetchUnreadCount, 5000);
+    
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -88,6 +121,9 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
                 </Link>
                 <Link href="/messagerie" style={styles.link}>
                   Conversation
+                  {unreadCount > 0 && (
+                    <span style={styles.badge}>{unreadCount}</span>
+                  )}
                 </Link>
                 <button onClick={handleLogout} style={styles.button}>
                   Déconnexion
@@ -161,5 +197,20 @@ const styles: Record<string, CSSProperties> = {
   userName: {
     color: '#2f241d',
     fontWeight: 600,
+  } as React.CSSProperties,
+  badge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#d32f2f',
+    color: 'white',
+    borderRadius: '50%',
+    width: '20px',
+    height: '20px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    marginLeft: '6px',
+    position: 'relative' as const,
+    top: '-2px',
   } as React.CSSProperties,
 };
