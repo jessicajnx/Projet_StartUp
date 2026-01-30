@@ -22,7 +22,7 @@ jobs:
       - name: 📦 Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r backend/requirements.txt
 
       - name: 🧪 Run tests (unit + integration)
         env:
@@ -30,4 +30,4 @@ jobs:
             ALGORITHM: HS256
             ACCESS_TOKEN_EXPIRE_MINUTES: 30
         run: |
-            pytest -v -m "unit or integration" --disable-warnings
+            pytest -v -m "unit or integration" backend/tests
