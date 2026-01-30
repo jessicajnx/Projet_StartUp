@@ -146,7 +146,7 @@ class MessageCreate(MessageBase):
     pass
 
 class Message(MessageBase):
-    id: int
+    id: int         
     id_sender: int
     datetime: datetime
     is_read: int
