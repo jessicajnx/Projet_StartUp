@@ -104,7 +104,8 @@
 
 .actionsRow {
   display: flex;
-  margin-top: 0.5rem;
+  margin-top: auto;
+  padding-top: 1rem;
   justify-content: center;
 }
 

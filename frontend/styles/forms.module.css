@@ -86,6 +86,19 @@
 }
 
 /* Search */
+.searchBar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.searchBar .input {
+  flex: 1;
+  min-width: 300px;
+}
+
 .searchContainer {
   position: relative;
   max-width: 600px;

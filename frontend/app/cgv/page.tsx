@@ -2,17 +2,18 @@
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import styles from '@/styles/layout.module.css';
 
 export default function CGV() {
   return (
-    <div style={styles.container}>
+    <div className={styles.container}>
       <Header />
-      <main style={styles.main}>
-        <div style={styles.content}>
-          <h1 style={styles.title}>Conditions Générales d'Utilisation</h1>
+      <main className={styles.main}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1rem' }}>
+          <h1 style={{ fontSize: "2.5rem", color: "var(--color-secondary)", marginBottom: "2rem", textAlign: "center", fontWeight: 700 }}>Conditions Générales d'Utilisation</h1>
           
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>1. Objet</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>1. Objet</h2>
             <p>
               Les présentes Conditions Générales d'Utilisation (CGU) ont pour objet de définir les 
               modalités et conditions dans lesquelles les utilisateurs peuvent accéder et utiliser 
@@ -23,8 +24,8 @@ export default function CGV() {
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>2. Description du service</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>2. Description du service</h2>
             <p>
               Livre2Main est une plateforme gratuite permettant aux utilisateurs d'échanger des livres 
               entre eux de manière locale. Le service permet de :
@@ -38,8 +39,8 @@ export default function CGV() {
             </ul>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>3. Inscription</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>3. Inscription</h2>
             <p>
               Pour utiliser les services de Livre2Main, vous devez créer un compte en fournissant :
             </p>
@@ -56,9 +57,9 @@ export default function CGV() {
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>4. Utilisation de la plateforme</h2>
-            <h3 style={styles.subsubtitle}>4.1 Obligations des utilisateurs</h3>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>4. Utilisation de la plateforme</h2>
+            <h3 style={{ fontSize: "1.2rem", color: "var(--color-text)", marginBottom: "0.5rem", fontWeight: 600, marginTop: "1rem" }}>4.1 Obligations des utilisateurs</h3>
             <p>En utilisant Livre2Main, vous vous engagez à :</p>
             <ul>
               <li>Respecter les autres utilisateurs et leurs biens</li>
@@ -69,7 +70,7 @@ export default function CGV() {
               <li>Respecter les droits de propriété intellectuelle</li>
             </ul>
 
-            <h3 style={styles.subsubtitle}>4.2 Interdictions</h3>
+            <h3 style={{ fontSize: "1.2rem", color: "var(--color-text)", marginBottom: "0.5rem", fontWeight: 600, marginTop: "1rem" }}>4.2 Interdictions</h3>
             <p>Il est strictement interdit de :</p>
             <ul>
               <li>Créer plusieurs comptes</li>
@@ -81,15 +82,15 @@ export default function CGV() {
             </ul>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>5. Échanges de livres</h2>
-            <h3 style={styles.subsubtitle}>5.1 Modalités</h3>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>5. Échanges de livres</h2>
+            <h3 style={{ fontSize: "1.2rem", color: "var(--color-text)", marginBottom: "0.5rem", fontWeight: 600, marginTop: "1rem" }}>5.1 Modalités</h3>
             <p>
               Les échanges de livres se font directement entre utilisateurs. Livre2Main met simplement 
               en relation les utilisateurs et ne gère pas physiquement les échanges.
             </p>
             
-            <h3 style={styles.subsubtitle}>5.2 Responsabilité</h3>
+            <h3 style={{ fontSize: "1.2rem", color: "var(--color-text)", marginBottom: "0.5rem", fontWeight: 600, marginTop: "1rem" }}>5.2 Responsabilité</h3>
             <p>
               Livre2Main n'est pas responsable :
             </p>
@@ -105,8 +106,8 @@ export default function CGV() {
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>6. Signalements et sanctions</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>6. Signalements et sanctions</h2>
             <p>
               En cas de comportement inapproprié, vous pouvez signaler un utilisateur. 
               Livre2Main se réserve le droit de :
@@ -118,8 +119,8 @@ export default function CGV() {
             </ul>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>7. Propriété intellectuelle</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>7. Propriété intellectuelle</h2>
             <p>
               Tous les éléments de la plateforme Livre2Main (logo, design, textes, code) sont 
               protégés par le droit d'auteur. Toute reproduction ou utilisation sans autorisation 
@@ -131,8 +132,8 @@ export default function CGV() {
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>8. Données personnelles</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>8. Données personnelles</h2>
             <p>
               Le traitement de vos données personnelles est décrit dans notre 
               Politique de Confidentialité. En utilisant Livre2Main, vous acceptez 
@@ -140,8 +141,8 @@ export default function CGV() {
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>9. Limitation de responsabilité</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>9. Limitation de responsabilité</h2>
             <p>
               Livre2Main s'efforce de maintenir la plateforme accessible et fonctionnelle, mais ne 
               peut garantir :
@@ -157,8 +158,8 @@ export default function CGV() {
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>10. Modifications des CGU</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>10. Modifications des CGU</h2>
             <p>
               Livre2Main se réserve le droit de modifier les présentes CGU à tout moment. 
               Les utilisateurs seront informés des modifications importantes. La poursuite de 
@@ -166,8 +167,8 @@ export default function CGV() {
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>11. Résiliation</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>11. Résiliation</h2>
             <p>
               Vous pouvez supprimer votre compte à tout moment depuis votre profil. 
               Livre2Main se réserve également le droit de suspendre ou supprimer votre compte 
@@ -175,16 +176,16 @@ export default function CGV() {
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>12. Droit applicable et juridiction</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>12. Droit applicable et juridiction</h2>
             <p>
               Les présentes CGU sont régies par le droit français. Tout litige sera soumis à 
               la compétence exclusive des tribunaux français.
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>13. Contact</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>13. Contact</h2>
             <p>
               Pour toute question concernant ces CGU :
             </p>
@@ -200,47 +201,3 @@ export default function CGV() {
     </div>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #f7f2ea 0%, #f1e5d5 45%, #e6d4c0 100%)',
-  },
-  main: {
-    flex: 1,
-    padding: '2rem 1rem',
-  },
-  content: {
-    maxWidth: '900px',
-    margin: '0 auto',
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderRadius: '18px',
-    padding: '2rem',
-    boxShadow: '0 18px 45px rgba(47,36,29,0.12)',
-  },
-  title: {
-    fontSize: '2.5rem',
-    color: '#2f241d',
-    marginBottom: '2rem',
-    textAlign: 'center' as const,
-    fontWeight: 700,
-  },
-  section: {
-    marginBottom: '2rem',
-  },
-  subtitle: {
-    fontSize: '1.5rem',
-    color: '#8b5e3c',
-    marginBottom: '1rem',
-    fontWeight: 600,
-  },
-  subsubtitle: {
-    fontSize: '1.2rem',
-    color: '#5c4b3a',
-    marginBottom: '0.5rem',
-    fontWeight: 600,
-    marginTop: '1rem',
-  },
-};

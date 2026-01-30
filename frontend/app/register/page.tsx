@@ -5,6 +5,10 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { authAPI } from "@/lib/api";
+import styles from "@/styles/hero.module.css";
+import cardStyles from "@/styles/cards.module.css";
+import formStyles from "@/styles/forms.module.css";
+import buttonStyles from "@/styles/buttons.module.css";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/;
@@ -120,115 +124,140 @@ export default function Register() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div className={styles.container}>
       <Header hideAuthActions />
-      <main className="auth-page" style={{ flex: 1 }}>
-        <div className="card">
-          <div className="card-header">
-            <p className="card-kicker">Livre2main</p>
-            <h1 className="card-title">Inscription</h1>
-            <p className="card-sub">Créez votre compte et commencez à échanger vos livres.</p>
-          </div>
-          <form onSubmit={handleSubmit} className="form-grid">
-            <label className="field">
-              Prénom
-              <input
-                value={form.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                className="input"
-                required
-              />
-            </label>
-            <label className="field">
-              Nom
-              <input
-                value={form.surname}
-                onChange={(e) => handleChange("surname", e.target.value)}
-                className="input"
-                required
-              />
-            </label>
-            <label className="field">
-              Email
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                className="input"
-                required
-              />
-            </label>
-            <label className="field">
-              Ville
-              <input
-                value={form.villes}
-                onChange={(e) => handleChange("villes", e.target.value)}
-                className="input"
-                required
-              />
-            </label>
-            <label className="field">
-              Âge
-              <input
-                type="number"
-                min={0}
-                value={form.age}
-                onChange={(e) => handleChange("age", e.target.value)}
-                className="input"
-                required
-              />
-            </label>
-            <label className="field" style={{ gridColumn: "1 / -1" }}>
-              Mot de passe
-              <input
-                type="password"
-                value={form.mdp}
-                pattern={passwordRegex.source}
-                onChange={(e) => handleChange("mdp", e.target.value)}
-                className="input"
-                required
-              />
-            </label>
-            {passwordErrors.length > 0 && (
-              <ul
-                style={{
-                  gridColumn: "1 / -1",
-                  marginTop: "0.5rem",
-                  paddingLeft: "1.2rem",
-                  color: "#c0392b",
-                  fontSize: "0.9rem",
-                }}
-              >
-                {passwordRules.map(rule => {
-                  const ok = !passwordErrors.includes(rule.message);
-                  return (
-                    <li key={rule.message} style={{ color: ok ? "#27ae60" : "#c0392b" }}>
-                      {ok ? "✅" : "❌"} {rule.message}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-
-            {error && <p className="text-error" style={{ gridColumn: "1 / -1" }}>{String(error)}</p>}
-            {success && <p className="text-success" style={{ gridColumn: "1 / -1" }}>{String(success)}</p>}
-            <div className="actions" style={{ gridColumn: "1 / -1" }}>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary"
-              >
-                {loading ? "Création..." : "Créer mon compte"}
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push("/login")}
-                className="btn btn-ghost"
-              >
-                Déjà inscrit ? Connexion
-              </button>
+      <main className={styles.main}>
+        <div style={{ padding: '4rem 2rem', maxWidth: '720px', margin: '0 auto' }}>
+          <div className={cardStyles.card}>
+            <div className={cardStyles.cardHeader}>
+              <p className={cardStyles.cardKicker}>Livre2Main</p>
+              <h1 className={cardStyles.cardTitle}>Inscription</h1>
+              <p className={cardStyles.cardSub}>Créez votre compte et commencez à échanger vos livres.</p>
             </div>
-          </form>
+            <form onSubmit={handleSubmit} className={formStyles.form}>
+              <div className={formStyles.formGrid}>
+                <div className={formStyles.formGroup}>
+                  <label className={formStyles.label}>
+                    Prénom
+                    <input
+                      value={form.name}
+                      onChange={(e) => handleChange("name", e.target.value)}
+                      className={formStyles.input}
+                      required
+                    />
+                  </label>
+                </div>
+                <div className={formStyles.formGroup}>
+                  <label className={formStyles.label}>
+                    Nom
+                    <input
+                      value={form.surname}
+                      onChange={(e) => handleChange("surname", e.target.value)}
+                      className={formStyles.input}
+                      required
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className={formStyles.formGrid}>
+                <div className={formStyles.formGroup}>
+                  <label className={formStyles.label}>
+                    Email
+                    <input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => handleChange("email", e.target.value)}
+                      className={formStyles.input}
+                      required
+                    />
+                  </label>
+                </div>
+                <div className={formStyles.formGroup}>
+                  <label className={formStyles.label}>
+                    Ville
+                    <input
+                      value={form.villes}
+                      onChange={(e) => handleChange("villes", e.target.value)}
+                      className={formStyles.input}
+                      required
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className={formStyles.formGroup}>
+                <label className={formStyles.label}>
+                  Âge
+                  <input
+                    type="number"
+                    min={0}
+                    value={form.age}
+                    onChange={(e) => handleChange("age", e.target.value)}
+                    className={formStyles.input}
+                    required
+                  />
+                </label>
+              </div>
+              <div className={formStyles.formGroup}>
+                <label className={formStyles.label}>
+                  Mot de passe
+                  <input
+                    type="password"
+                    value={form.mdp}
+                    pattern={passwordRegex.source}
+                    onChange={(e) => handleChange("mdp", e.target.value)}
+                    className={formStyles.input}
+                    required
+                  />
+                </label>
+              </div>
+              {passwordErrors.length > 0 && (
+                <ul
+                  style={{
+                    marginTop: "0.5rem",
+                    paddingLeft: "1.2rem",
+                    color: "var(--color-error)",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  {passwordRules.map(rule => {
+                    const ok = !passwordErrors.includes(rule.message);
+                    return (
+                      <li key={rule.message} style={{ color: ok ? "var(--color-success)" : "var(--color-error)" }}>
+                        {ok ? "✅" : "❌"} {rule.message}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              {error && (
+                <p style={{ color: 'var(--color-error)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                  {String(error)}
+                </p>
+              )}
+              {success && (
+                <p style={{ color: 'var(--color-success)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                  {String(success)}
+                </p>
+              )}
+              <div className={formStyles.actions}>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`${buttonStyles.btn} ${buttonStyles.btnPrimary} ${buttonStyles.btnFull}`}
+                >
+                  {loading ? "Création..." : "Créer mon compte"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/login")}
+                  className={`${buttonStyles.btn} ${buttonStyles.btnGhost} ${buttonStyles.btnFull}`}
+                >
+                  Déjà inscrit ? Connexion
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </main>
       <Footer />

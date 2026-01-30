@@ -2,8 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Settings, MapPin, BookOpen, User as UserIcon } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import styles from '@/styles/profil.module.css';
+import cardStyles from '@/styles/cards.module.css';
+import buttonStyles from '@/styles/buttons.module.css';
+import formStyles from '@/styles/forms.module.css';
+import paginationStyles from '@/styles/pagination.module.css';
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/;
@@ -24,17 +30,21 @@ interface PersonalBook {
   title: string;
   authors?: string[];
   cover_url?: string;
+  description?: string;
 }
 
 export default function ProfilPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [livres, setLivres] = useState<PersonalBook[]>([]);
+  const [filteredLivres, setFilteredLivres] = useState<PersonalBook[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     surname: '',
@@ -44,6 +54,8 @@ export default function ProfilPage() {
     password: '',
     confirmPassword: '',
   });
+  
+  const itemsPerPage = 6;
 
   useEffect(() => {
     const load = async () => {
@@ -80,7 +92,7 @@ export default function ProfilPage() {
           confirmPassword: '',
         });
 
-        const livresResponse = await fetch(`${API_URL}/bibliotheque-personnelle/me?page=1&page_size=50`, {
+        const livresResponse = await fetch(`${API_URL}/bibliotheque-personnelle/me?page=1&page_size=100`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -88,7 +100,9 @@ export default function ProfilPage() {
 
         if (livresResponse.ok) {
           const livresData = await livresResponse.json();
-          setLivres(livresData.items || []);
+          const booksData = livresData.items || [];
+          setLivres(booksData);
+          setFilteredLivres(booksData);
         }
 
         setIsLoading(false);
@@ -100,6 +114,19 @@ export default function ProfilPage() {
 
     load();
   }, [router]);
+
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredLivres(livres);
+    } else {
+      const filtered = livres.filter((livre) =>
+        livre.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (livre.authors && livre.authors.some((author) => author.toLowerCase().includes(searchTerm.toLowerCase())))
+      );
+      setFilteredLivres(filtered);
+    }
+    setCurrentPage(1);
+  }, [searchTerm, livres]);
 
   const handleEditToggle = () => {
     if (!user) return;
@@ -181,12 +208,41 @@ export default function ProfilPage() {
     }
   };
 
+  const handleDeleteBook = async (bookId: number) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_URL}/bibliotheque-personnelle/${bookId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setLivres((prev) => prev.filter((livre) => livre.id !== bookId));
+        setFilteredLivres((prev) => prev.filter((livre) => livre.id !== bookId));
+      }
+    } catch (err) {
+      console.error('Erreur lors de la suppression:', err);
+    }
+  };
+
+  // Pagination
+  const totalPages = Math.ceil(filteredLivres.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentBooks = filteredLivres.slice(startIndex, endIndex);
+
   if (isLoading) {
     return (
-      <div style={styles.container}>
+      <div className={styles.container}>
         <Header />
-        <main style={styles.main}>
-          <div style={styles.loading}>Chargement...</div>
+        <main className={styles.main}>
+          <div className={styles.loadingContainer}>
+            <p>Chargement...</p>
+          </div>
         </main>
         <Footer />
       </div>
@@ -195,10 +251,10 @@ export default function ProfilPage() {
 
   if (error || !user) {
     return (
-      <div style={styles.container}>
+      <div className={styles.container}>
         <Header />
-        <main style={styles.main}>
-          <div style={styles.error}>
+        <main className={styles.main}>
+          <div className={styles.errorContainer}>
             <h2>Erreur</h2>
             <p>{error || 'Utilisateur non trouvé'}</p>
           </div>
@@ -209,332 +265,217 @@ export default function ProfilPage() {
   }
 
   return (
-    <div style={styles.container}>
+    <div className={styles.container}>
       <Header />
-      <main style={styles.main}>
-        <div style={styles.content}>
-          <div style={styles.profileCard}>
-            <div style={styles.avatar}>
-              {user.name.charAt(0)}{user.surname.charAt(0)}
+      <main className={styles.main}>
+        <div className={styles.content}>
+          <h1 className={styles.pageTitle}>Mon Profil</h1>
+          
+          {/* Profile Section */}
+          <div className={styles.profileSection}>
+            <div className={styles.profileHeader}>
+              <div className={styles.avatarContainer}>
+                <div className={styles.avatar}>
+                  <span className={styles.avatarInitials}>
+                    {user.name.charAt(0).toUpperCase()}{user.surname.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              </div>
+              
+              <button 
+                className={styles.settingsButton}
+                onClick={() => setIsEditing(true)}
+                title="Modifier les informations"
+              >
+                <Settings size={24} />
+              </button>
             </div>
-            <h1 style={styles.userName}>{user.name} {user.surname}</h1>
-            {!isEditing ? (
-              <div style={styles.profileInfo}>
-                <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Ville:</strong> {user.villes}</p>
-                <p><strong>Âge:</strong> {user.age}</p>
-                <p><strong>Rôle:</strong> {user.role}</p>
-                <button onClick={handleEditToggle} style={styles.editButton}>
-                  Modifier mes informations
-                </button>
-              </div>
-            ) : (
-              <div style={styles.editForm}>
-                <div style={styles.formRow}>
-                  <label style={styles.label}>
-                    Prénom
-                    <input
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      style={styles.input}
-                      type="text"
-                    />
-                  </label>
-                  <label style={styles.label}>
-                    Nom
-                    <input
-                      value={formData.surname}
-                      onChange={(e) => handleInputChange('surname', e.target.value)}
-                      style={styles.input}
-                      type="text"
-                    />
-                  </label>
-                </div>
-                <div style={styles.formRow}>
-                  <label style={styles.label}>
-                    Email
-                    <input
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      style={styles.input}
-                      type="email"
-                    />
-                  </label>
-                  <label style={styles.label}>
-                    Ville
-                    <input
-                      value={formData.villes}
-                      onChange={(e) => handleInputChange('villes', e.target.value)}
-                      style={styles.input}
-                      type="text"
-                    />
-                  </label>
-                </div>
-                <div style={styles.formRow}>
-                  <label style={styles.label}>
-                    Âge
-                    <input
-                      value={formData.age}
-                      onChange={(e) => handleInputChange('age', e.target.value)}
-                      style={styles.input}
-                      type="number"
-                      min={12}
-                    />
-                  </label>
-                </div>
-                <div style={styles.formRow}>
-                  <label style={styles.label}>
-                    Nouveau mot de passe
-                    <input
-                      value={formData.password}
-                      onChange={(e) => handleInputChange('password', e.target.value)}
-                      style={styles.input}
-                      type="password"
-                      placeholder="••••••••"
-                    />
-                  </label>
-                  <label style={styles.label}>
-                    Confirmer le mot de passe
-                    <input
-                      value={formData.confirmPassword}
-                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                      style={styles.input}
-                      type="password"
-                      placeholder="••••••••"
-                    />
-                  </label>
-                </div>
-                {formError && <p style={styles.formError}>{formError}</p>}
-                <div style={styles.formActions}>
-                  <button onClick={handleSave} style={styles.saveButton} disabled={isSaving}>
-                    {isSaving ? 'Enregistrement...' : 'Enregistrer'}
-                  </button>
-                  <button onClick={handleEditToggle} style={styles.cancelButton} disabled={isSaving}>
-                    Annuler
-                  </button>
-                </div>
-              </div>
-            )}
+
+            <div className={styles.profileInfo}>
+              <h2 className={styles.userName}>{user.name} {user.surname} <span className={styles.userAge}>{user.age}ans</span></h2>
+              <p className={styles.userDetail}>
+                <MapPin size={20} className={styles.iconCircle} /> Ville résidence: {user.villes}
+              </p>
+              <p className={styles.userDetail}>
+                <BookOpen size={20} className={styles.iconCircle} /> Vos livres disponibles: {livres.length}
+              </p>
+              <p className={styles.userDetail}>
+                <UserIcon size={20} className={styles.iconCircle} /> Type d'abonnement: {user.role}
+              </p>
+            </div>
           </div>
 
-          <div style={styles.librarySection}>
-            <h2 style={styles.sectionTitle}>📚 Ma bibliothèque ({livres.length})</h2>
-            {livres.length === 0 ? (
-              <p style={styles.emptyText}>Aucun livre dans votre bibliothèque</p>
+          {/* Books Section */}
+          <div className={styles.booksSection}>
+            <h2 className={styles.sectionTitle}>Mes Livres</h2>
+            
+            <div className={formStyles.searchContainer}>
+              <input
+                type="text"
+                placeholder="Search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={formStyles.searchInput}
+              />
+            </div>
+
+            {filteredLivres.length === 0 ? (
+              <p className={styles.emptyMessage}>Aucun livre trouvé</p>
             ) : (
-              <div style={styles.booksGrid}>
-                {livres.map((livre) => (
-                  <div key={livre.id} style={styles.bookCard}>
-                    {livre.cover_url ? (
-                      <img
-                        src={livre.cover_url}
-                        alt={livre.title}
-                        style={styles.bookCover}
-                      />
-                    ) : (
-                      <div style={styles.noCover}>📖</div>
-                    )}
-                    <div style={styles.bookInfo}>
-                      <h3 style={styles.bookTitle}>{livre.title}</h3>
-                      {livre.authors && livre.authors.length > 0 && (
-                        <p style={styles.bookAuthor}>
-                          {Array.isArray(livre.authors) ? livre.authors.join(', ') : livre.authors}
-                        </p>
-                      )}
+              <>
+                <div className={styles.booksGrid}>
+                  {currentBooks.map((livre) => (
+                    <div key={livre.id} className={cardStyles.bookCard}>
+                      <div className={cardStyles.coverWrapper}>
+                        {livre.cover_url ? (
+                          <img
+                            src={livre.cover_url}
+                            alt={livre.title}
+                            className={cardStyles.coverImage}
+                          />
+                        ) : (
+                          <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                            <rect x="20" y="10" width="40" height="60" rx="2" fill="#C8B299" />
+                            <rect x="25" y="15" width="30" height="50" rx="1" fill="#E5D7C6" />
+                            <line x1="30" y1="25" x2="50" y2="25" stroke="#8B7355" strokeWidth="2" />
+                            <line x1="30" y1="35" x2="50" y2="35" stroke="#8B7355" strokeWidth="2" />
+                            <line x1="30" y1="45" x2="45" y2="45" stroke="#8B7355" strokeWidth="2" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className={cardStyles.cardContent}>
+                        <div style={{ flex: 1 }}>
+                          <h3 className={styles.bookTitle}>{livre.title}</h3>
+                          <p className={styles.bookDescription}>
+                            {livre.description
+                              ? livre.description.substring(0, 80) + '...'
+                              : (livre.authors && livre.authors.length > 0)
+                              ? `Par ${livre.authors.join(', ')}`
+                              : 'Lorem ipsum dolor sit amet'}
+                          </p>
+                        </div>
+                        <div className={cardStyles.cardFooter}>
+                          <button
+                            onClick={() => handleDeleteBook(livre.id)}
+                            className={`${buttonStyles.btn} ${buttonStyles.btnPrimary} ${buttonStyles.btnFull}`}
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+
+                <div className={paginationStyles.pagination}>
+                  <span className={paginationStyles.pageInfo}>{currentPage} / {totalPages}</span>
+                </div>
+              </>
             )}
           </div>
         </div>
       </main>
       <Footer />
+
+      {/* Edit Modal */}
+      {isEditing && (
+        <div className={styles.modalOverlay} onClick={() => setIsEditing(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <button className={styles.closeButton} onClick={() => setIsEditing(false)}>
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.modalContent}>
+              <div className={formStyles.formGroup}>
+                <label className={formStyles.label}>Modifier Nom</label>
+                <input
+                  type="text"
+                  value={formData.surname}
+                  onChange={(e) => handleInputChange('surname', e.target.value)}
+                  className={formStyles.input}
+                />
+              </div>
+
+              <div className={formStyles.formGroup}>
+                <label className={formStyles.label}>Modifier Ville</label>
+                <input
+                  type="text"
+                  value={formData.villes}
+                  onChange={(e) => handleInputChange('villes', e.target.value)}
+                  className={formStyles.input}
+                />
+              </div>
+
+              <div className={formStyles.formGroup}>
+                <label className={formStyles.label}>Modifier Prénom</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  className={formStyles.input}
+                />
+              </div>
+
+              <div className={formStyles.formGroup}>
+                <label className={formStyles.label}>Modifier mot de passe</label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  className={formStyles.input}
+                  placeholder="Nouveau mot de passe"
+                />
+              </div>
+
+              <div className={formStyles.formGroup}>
+                <label className={formStyles.label}>Modifier Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className={formStyles.input}
+                />
+              </div>
+
+              <div className={formStyles.formGroup}>
+                <label className={formStyles.label}>Modifier l'age</label>
+                <input
+                  type="number"
+                  value={formData.age}
+                  onChange={(e) => handleInputChange('age', e.target.value)}
+                  className={formStyles.input}
+                  min="12"
+                />
+              </div>
+
+              {formData.password && (
+                <div className={formStyles.formGroup}>
+                  <label className={formStyles.label}>Confirmer mot de passe</label>
+                  <input
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    className={formStyles.input}
+                    placeholder="Confirmer le mot de passe"
+                  />
+                </div>
+              )}
+
+              {formError && <p className={styles.formError}>{formError}</p>}
+
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className={`${buttonStyles.btn} ${buttonStyles.btnPrimary} ${buttonStyles.btnFull}`}
+              >
+                {isSaving ? 'Enregistrement...' : 'Appliquer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    minHeight: '100vh',
-  },
-  main: {
-    flex: 1,
-    backgroundColor: '#F5E6D3',
-    padding: '2rem',
-  },
-  content: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-  },
-  loading: {
-    textAlign: 'center' as const,
-    padding: '3rem',
-    fontSize: '1.2rem',
-    color: '#8B7355',
-  },
-  error: {
-    textAlign: 'center' as const,
-    padding: '3rem',
-    color: '#d32f2f',
-  },
-  profileCard: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '2rem',
-    textAlign: 'center' as const,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-    marginBottom: '2rem',
-  },
-  avatar: {
-    width: '100px',
-    height: '100px',
-    borderRadius: '50%',
-    backgroundColor: '#8B7355',
-    color: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '2.5rem',
-    fontWeight: 'bold',
-    margin: '0 auto 1rem',
-  },
-  userName: {
-    fontSize: '2rem',
-    color: '#5D4E37',
-    marginBottom: '1rem',
-  },
-  profileInfo: {
-    color: '#6d5642',
-    lineHeight: 1.8,
-  },
-  editButton: {
-    marginTop: '1.5rem',
-    backgroundColor: '#8b5e3c',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: 600,
-  },
-  editForm: {
-    marginTop: '1.5rem',
-    textAlign: 'left' as const,
-  },
-  formRow: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '1rem',
-    marginBottom: '1rem',
-  },
-  label: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '0.5rem',
-    fontWeight: 600,
-    color: '#5D4E37',
-  },
-  input: {
-    padding: '0.6rem 0.75rem',
-    borderRadius: '8px',
-    border: '1px solid #D4B59E',
-    fontSize: '0.95rem',
-    outline: 'none',
-  },
-  formActions: {
-    display: 'flex',
-    gap: '1rem',
-    marginTop: '1.5rem',
-  },
-  saveButton: {
-    backgroundColor: '#8b5e3c',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: 600,
-  },
-  cancelButton: {
-    backgroundColor: '#D4B59E',
-    color: '#5D4E37',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: 600,
-  },
-  formError: {
-    color: '#d32f2f',
-    marginTop: '0.5rem',
-  },
-  librarySection: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '2rem',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-  },
-  sectionTitle: {
-    fontSize: '1.5rem',
-    color: '#5D4E37',
-    marginBottom: '1.5rem',
-  },
-  emptyText: {
-    textAlign: 'center' as const,
-    color: '#8B7355',
-    padding: '2rem',
-  },
-  booksGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-    gap: '1.5rem',
-  },
-  bookCard: {
-    backgroundColor: '#F5E6D3',
-    borderRadius: '8px',
-    padding: '1rem',
-    textAlign: 'center' as const,
-  },
-  bookCover: {
-    width: '100%',
-    height: '200px',
-    objectFit: 'cover' as const,
-    borderRadius: '4px',
-    marginBottom: '0.75rem',
-  },
-  noCover: {
-    width: '100%',
-    height: '200px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#D4B59E',
-    borderRadius: '4px',
-    marginBottom: '0.75rem',
-    fontSize: '3rem',
-  },
-  bookInfo: {
-    textAlign: 'left' as const,
-  },
-  bookTitle: {
-    fontSize: '0.9rem',
-    fontWeight: 'bold',
-    color: '#5D4E37',
-    marginBottom: '0.25rem',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    display: '-webkit-box',
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: 'vertical' as const,
-  },
-  bookAuthor: {
-    fontSize: '0.8rem',
-    color: '#8B7355',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
-  },
-};

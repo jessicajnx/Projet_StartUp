@@ -214,7 +214,11 @@ export default function RechercheLivre() {
         source_id: book.id,
       });
       setSaveMessage(`“${book.title}” ajouté à votre bibliothèque.`);
-      setAddedIds((prev) => new Set([...prev, book.id]));
+      setAddedIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(book.id);
+        return newSet;
+      });
     } catch (err: any) {
       const msg = err?.response?.data?.detail || err?.message || "Ajout impossible";
       setSaveMessage(msg);

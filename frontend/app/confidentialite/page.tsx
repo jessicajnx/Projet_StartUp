@@ -2,17 +2,18 @@
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import styles from '@/styles/layout.module.css';
 
 export default function Confidentialite() {
   return (
-    <div style={styles.container}>
+    <div className={styles.container}>
       <Header />
-      <main style={styles.main}>
-        <div style={styles.content}>
-          <h1 style={styles.title}>Politique de Confidentialité</h1>
+      <main className={styles.main}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1rem' }}>
+          <h1 style={{ fontSize: "2.5rem", color: "var(--color-secondary)", marginBottom: "2rem", textAlign: "center", fontWeight: 700 }}>Politique de Confidentialité</h1>
           
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>1. Introduction</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>1. Introduction</h2>
             <p>
               La présente politique de confidentialité a pour but de vous informer sur la manière 
               dont Livre2Main traite vos données personnelles lorsque vous utilisez notre plateforme 
@@ -24,8 +25,8 @@ export default function Confidentialite() {
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>2. Données collectées</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>2. Données collectées</h2>
             <p>Nous collectons les données suivantes :</p>
             <ul>
               <li><strong>Données d'identification :</strong> nom, prénom, email, âge</li>
@@ -36,8 +37,8 @@ export default function Confidentialite() {
             </ul>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>3. Finalités du traitement</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>3. Finalités du traitement</h2>
             <p>Vos données personnelles sont utilisées pour :</p>
             <ul>
               <li>Créer et gérer votre compte utilisateur</li>
@@ -49,8 +50,8 @@ export default function Confidentialite() {
             </ul>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>4. Durée de conservation</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>4. Durée de conservation</h2>
             <p>
               Vos données personnelles sont conservées pendant toute la durée d'utilisation de votre 
               compte, et jusqu'à 3 ans après votre dernière connexion. Vous pouvez demander la 
@@ -58,8 +59,8 @@ export default function Confidentialite() {
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>5. Partage des données</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>5. Partage des données</h2>
             <p>
               Vos données personnelles ne sont jamais vendues à des tiers. Elles peuvent être 
               partagées uniquement dans les cas suivants :
@@ -70,8 +71,8 @@ export default function Confidentialite() {
             </ul>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>6. Sécurité des données</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>6. Sécurité des données</h2>
             <p>
               Nous mettons en œuvre toutes les mesures techniques et organisationnelles appropriées 
               pour protéger vos données personnelles contre tout accès non autorisé, modification, 
@@ -85,8 +86,8 @@ export default function Confidentialite() {
             </ul>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>7. Vos droits</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>7. Vos droits</h2>
             <p>Conformément au RGPD, vous disposez des droits suivants :</p>
             <ul>
               <li><strong>Droit d'accès :</strong> obtenir une copie de vos données personnelles</li>
@@ -101,8 +102,8 @@ export default function Confidentialite() {
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>8. Cookies</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>8. Cookies</h2>
             <p>
               Notre site utilise des cookies techniques nécessaires au bon fonctionnement de la 
               plateforme (authentification, préférences utilisateur). Vous pouvez désactiver les 
@@ -111,8 +112,8 @@ export default function Confidentialite() {
             </p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>9. Modifications</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>9. Modifications</h2>
             <p>
               Nous nous réservons le droit de modifier cette politique de confidentialité à tout 
               moment. Les modifications prendront effet dès leur publication sur cette page. Nous 
@@ -121,8 +122,8 @@ export default function Confidentialite() {
             <p><strong>Dernière mise à jour :</strong> 28 janvier 2026</p>
           </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.subtitle}>10. Contact</h2>
+          <section style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "1rem", fontWeight: 600 }}>10. Contact</h2>
             <p>
               Pour toute question concernant cette politique de confidentialité ou vos données 
               personnelles, vous pouvez nous contacter :
@@ -138,40 +139,3 @@ export default function Confidentialite() {
     </div>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #f7f2ea 0%, #f1e5d5 45%, #e6d4c0 100%)',
-  },
-  main: {
-    flex: 1,
-    padding: '2rem 1rem',
-  },
-  content: {
-    maxWidth: '900px',
-    margin: '0 auto',
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderRadius: '18px',
-    padding: '2rem',
-    boxShadow: '0 18px 45px rgba(47,36,29,0.12)',
-  },
-  title: {
-    fontSize: '2.5rem',
-    color: '#2f241d',
-    marginBottom: '2rem',
-    textAlign: 'center' as const,
-    fontWeight: 700,
-  },
-  section: {
-    marginBottom: '2rem',
-  },
-  subtitle: {
-    fontSize: '1.5rem',
-    color: '#8b5e3c',
-    marginBottom: '1rem',
-    fontWeight: 600,
-  },
-};

@@ -5,6 +5,10 @@ import { useState } from "react";
 import { authAPI, userAPI } from "@/lib/api";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import styles from "@/styles/hero.module.css";
+import cardStyles from "@/styles/cards.module.css";
+import formStyles from "@/styles/forms.module.css";
+import buttonStyles from "@/styles/buttons.module.css";
 
 // Fonction pour décoder un JWT basique
 function decodeToken(token: string) {
@@ -84,50 +88,64 @@ export default function Login() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div className={styles.container}>
       <Header hideAuthActions />
-      <main className="auth-page" style={{ flex: 1 }}>
-        <div className="card card-narrow">
-          <div className="card-header">
-            <p className="card-kicker">Livre2main</p>
-            <h1 className="card-title">Connexion</h1>
-            <p className="card-sub">Ravis de vous revoir, accédez à votre bibliothèque.</p>
-          </div>
-          <form onSubmit={handleSubmit} className="form-grid" style={{ gap: "16px" }}>
-            <label className="field">
-              Email
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input"
-                required
-              />
-            </label>
-            <label className="field">
-              Mot de passe
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input"
-                required
-              />
-            </label>
-            {error && <p className="text-error" style={{ gridColumn: "1 / -1" }}>{String(error)}</p>}
-            <div className="actions" style={{ gridColumn: "1 / -1" }}>
-              <button type="submit" disabled={loading} className="btn btn-primary">
-                {loading ? "Connexion..." : "Se connecter"}
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push("/register")}
-                className="btn btn-ghost"
-              >
-                Pas de compte ? Inscription
-              </button>
+      <main className={styles.main}>
+        <div style={{ padding: '4rem 2rem', maxWidth: '480px', margin: '0 auto' }}>
+          <div className={`${cardStyles.card} ${cardStyles.cardNarrow}`}>
+            <div className={cardStyles.cardHeader}>
+              <p className={cardStyles.cardKicker}>Livre2Main</p>
+              <h1 className={cardStyles.cardTitle}>Connexion</h1>
+              <p className={cardStyles.cardSub}>Ravis de vous revoir, accédez à votre bibliothèque.</p>
             </div>
-          </form>
+            <form onSubmit={handleSubmit} className={formStyles.form}>
+              <div className={formStyles.formGroup}>
+                <label className={formStyles.label}>
+                  Email
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={formStyles.input}
+                    required
+                  />
+                </label>
+              </div>
+              <div className={formStyles.formGroup}>
+                <label className={formStyles.label}>
+                  Mot de passe
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={formStyles.input}
+                    required
+                  />
+                </label>
+              </div>
+              {error && (
+                <p style={{ color: 'var(--color-error)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                  {String(error)}
+                </p>
+              )}
+              <div className={formStyles.actions}>
+                <button 
+                  type="submit" 
+                  disabled={loading} 
+                  className={`${buttonStyles.btn} ${buttonStyles.btnPrimary} ${buttonStyles.btnFull}`}
+                >
+                  {loading ? "Connexion..." : "Se connecter"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/register")}
+                  className={`${buttonStyles.btn} ${buttonStyles.btnGhost} ${buttonStyles.btnFull}`}
+                >
+                  Pas de compte ? Inscription
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </main>
       <Footer />

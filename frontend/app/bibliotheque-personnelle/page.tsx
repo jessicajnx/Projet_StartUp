@@ -140,14 +140,16 @@ export default function BibliothequePersonnellePage() {
                     <div className={cardStyles.coverWrapper}>
                       <img src={cover} alt={book.title} className={cardStyles.coverImage} />
                     </div>
-                    <div className={bibliothequeStyles.meta}>
-                      <h3 className={bibliothequeStyles.livreTitle}>{book.title}</h3>
-                      {book.authors && book.authors.length > 0 && (
-                        <p className={bibliothequeStyles.livreAuthor}>par {book.authors.join(', ')}</p>
-                      )}
-                      {truncatedDescription && (
-                        <p className={typographyStyles.description}>{truncatedDescription}</p>
-                      )}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <div className={bibliothequeStyles.meta}>
+                        <h3 className={bibliothequeStyles.livreTitle}>{book.title}</h3>
+                        {book.authors && book.authors.length > 0 && (
+                          <p className={bibliothequeStyles.livreAuthor}>par {book.authors.join(', ')}</p>
+                        )}
+                        {truncatedDescription && (
+                          <p className={typographyStyles.description}>{truncatedDescription}</p>
+                        )}
+                      </div>
                     </div>
                     <div className={bibliothequeStyles.actionsRow}>
                       <button 
