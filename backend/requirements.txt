@@ -12,4 +12,6 @@ python-dotenv
 Pillow
 requests
 openai
-
+pytest
+pytest-cov
+httpx
