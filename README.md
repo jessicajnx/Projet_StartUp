@@ -17,6 +17,20 @@ project/
 - MySQL 8.0+ (ou SQLite pour le développement)
 - **Ollama** (pour la fonctionnalité de scan IA)
 
+## Installation rapide (Windows)
+
+Lancez simplement le script qui démarre tout :
+
+```bash
+start-all.bat
+```
+
+Cela lancera automatiquement :
+- Backend sur http://localhost:8000
+- Frontend sur http://localhost:3000
+
+---
+
 ## Installation Backend
 
 ### 1. Installer les dépendances
@@ -26,13 +40,43 @@ cd backend
 pip install -r requirements.txt
 ```
 
-### 2. Configurer la base de données
+### 2. Configurer les variables d'environnement
 
-#### Option A: SQLite (Développement - Par défaut)
+Copiez le fichier `.env.example` en `.env` et adaptez vos paramètres :
 
-Pas de configuration requise. La base de données SQLite sera créée automatiquement au démarrage.
+```bash
+cp .env.example .env
+```
 
-#### Option B: MySQL (Production)
+Fichier `.env` à créer dans `backend/`:
+
+```
+# Base de données
+DATABASE_URL=sqlite:///./livre2main.db
+
+# Configuration Ollama pour la vision d'images (optionnel - pour la fonctionnalité scan IA)
+OLLAMA_API_URL=http://localhost:11434
+VISION_MODEL=minicpm-v
+```
+
+**Note sur la base de données :**
+
+- **SQLite (Développement - Par défaut)** : Utilisez `sqlite:///./livre2main.db` - la DB se crée automatiquement
+- **MySQL (Production)** : Créez la base de données MySQL d'abord :
+
+```bash
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS projet_startup CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -p projet_startup < projet_startup.sql
+```
+
+Puis utilisez dans `.env` :
+```
+DATABASE_URL=mysql+pymysql://root:votre_password@localhost/projet_startup
+```
+
+### 3. Démarrer le serveur
+
+#### Option A: MySQL (Production)
 
 Créer la base de données MySQL:
 
@@ -71,11 +115,20 @@ npm install
 
 ### 2. Configurer les variables d'environnement
 
-Créez un fichier `.env.local` dans le dossier `frontend/`:
+Copiez le fichier `.env.local.example` en `.env.local` :
+
+```bash
+cp .env.local.example .env.local
+```
+
+Fichier `.env.local` à créer dans `frontend/`:
 
 ```
 NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY=votre_cle_api_ici
 ```
+
+**⚠️ Important** : La clé Google Books API ne doit pas être commitée. Utilisez votre propre clé ou laissez vide pour le développement.
 
 ### 3. Démarrer le serveur de développement
 
@@ -122,9 +175,9 @@ Le frontend sera accessible sur http://localhost:3000
 - `POST /ai/analyze-book` - Analyser une image de livre avec IA (détection multiple)
 - `POST /ai/add-detected-book` - Ajouter un livre détecté à la bibliothèque personnelle
 
-## Nouvelle Fonctionnalité : Scanner un Livre avec IA
+## Fonctionnalité : Scanner un Livre avec IA (MiniCPM-V via Ollama)
 
-Cette fonctionnalité utilise **MiniCPM-V** via **Ollama** pour détecter automatiquement les informations de plusieurs livres à partir d'une seule photo.
+Cette fonctionnalité est **optionnelle** et utilise **MiniCPM-V** via **Ollama** pour détecter automatiquement les informations de plusieurs livres à partir d'une seule photo.
 
 ### Configuration Ollama
 
@@ -135,11 +188,11 @@ Cette fonctionnalité utilise **MiniCPM-V** via **Ollama** pour détecter automa
 ollama pull minicpm-v
 ```
 
-3. Configurez le fichier `.env` du backend :
+3. Dans votre fichier `.env` du backend, assurez-vous que :
 
 ```env
 OLLAMA_API_URL=http://localhost:11434
-LLAVA_MODEL=minicpm-v
+VISION_MODEL=minicpm-v
 ```
 
 ### Utilisation
@@ -160,17 +213,6 @@ LLAVA_MODEL=minicpm-v
 - ✅ **100% local** : aucune clé API nécessaire, données privées
 - ✅ **Gratuit** : pas de frais d'API
 
-### Installation des dépendances
-
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-Les dépendances incluent :
-- `Pillow` - Traitement d'images
-- `requests` - Communication avec Ollama
-
 
 ## Schéma de base de données
 
@@ -185,31 +227,51 @@ Les dépendances incluent :
 - age (Int)
 
 ### Table Livre
-- id (PK)
-- nom (Varchar)
-- auteur (Varchar)
-- genre (Varchar)
+- id (PK)`User`
+- **ID** (PK) - Integer
+- **Name** - Varchar(100)
+- **Surname** - Varchar(100)
+- **Role** - Varchar(20) : Admin, Pauvre, Riche
+- **Villes** - Varchar(100)
+- **MDP** - Varchar(255) - hashé avec bcrypt
+- **Email** - Varchar(255) - UNIQUE
+- **Age** - Integer
+- **Signalement** - Integer (défaut: 0)
+- **liste_livres** - JSON
 
-### Table Emprunt
-- id (PK)
-- id_user1 (FK - Emprunteur)
-- id_user2 (FK - Emprunter)
-- datetime (DateTime)
+### Table `Livre`
+- **ID** (PK) - Integer
+- **Nom** - Varchar(255)
+- **Auteur** - Varchar(255)
+- **Genre** - Varchar(100)
 
-### Table user_livre
-- user_id (FK)
-- livre_id (FK)
+### Table `Emprunt`
+- **ID** (PK) - Integer
+- **IDUser1** (FK → User.ID) - Integer - Emprunteur
+- **IDUser2** (FK → User.ID) - Integer - Propriétaire (Emprunter)
+- **IDLivre** (FK → Livre.ID) - Integer
+- **DateTime** - DateTime
 
-## Commandes utiles
+### Table `BibliothequePersonnelle`
+- **ID** (PK) - Integer
+- **UserID** (FK → User.ID) - Integer
+- **Title** - Varchar(255)
+- **Authors** - JSON
+- **CoverUrl** - Varchar(512)
+- **InfoLink** - Varchar(512)
+- **Description** - Varchar(2000)
+- **Source** - Varchar(50) (défaut: google_books)
+- **SourceID** - Varchar(255)
+- **CreatedAt** - DateTime
 
-### Backend
-```bash
-cd backend
-pip install -r requirements.txt
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Frontend
+### Table `message`
+- **ID** (PK) - Integer
+- **IDEmprunt** (FK → Emprunt.ID) - Integer
+- **IDSender** (FK → User.ID) - Integer
+- **MessageText** - Varchar(2000)
+- **DateTime** - DateTime
+- **IsRead** - Integer (défaut: 0)
+- **MessageMetadata** - JSON
 ```bash
 cd frontend
 npm install
