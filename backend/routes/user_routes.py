@@ -4,9 +4,15 @@ from typing import List, Optional
 from database import get_db
 from models import User
 from schemas import User as UserSchema, UserUpdate
-from auth import decode_token
+from auth import decode_token, create_access_token
+from pydantic import BaseModel
+from datetime import timedelta
+import secrets
 
 router = APIRouter(prefix="/users", tags=["Users"])
+
+# Stockage temporaire des tokens de paiement (en production, utiliser Redis)
+payment_tokens = {}
 
 def get_current_user(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     if not authorization or not authorization.startswith("Bearer "):
@@ -122,3 +128,83 @@ def get_users_by_report(db: Session = Depends(get_db), current_user: User = Depe
     """Récupère tous les users triés par nombre de signalements (décroissant)"""
     users = db.query(User).order_by(User.signalement.desc()).all()
     return users
+
+
+# Modèles pour le paiement
+class PaymentTokenRequest(BaseModel):
+    pass
+
+class PaymentTokenResponse(BaseModel):
+    payment_token: str
+    expires_in: int
+
+class UpgradePremiumRequest(BaseModel):
+    payment_token: str
+
+
+@router.post("/request-payment-token", response_model=PaymentTokenResponse)
+def request_payment_token(current_user: User = Depends(get_current_user)):
+    """
+    Génère un token de paiement temporaire valide pendant 5 minutes.
+    Ce token doit être utilisé pour valider le paiement premium.
+    """
+    # Vérifier si l'utilisateur n'est pas déjà premium
+    if current_user.role.lower() in ["riche", "premium"]:
+        raise HTTPException(status_code=400, detail="Vous avez déjà l'abonnement Premium")
+
+    # Générer un token unique
+    payment_token = secrets.token_urlsafe(32)
+
+    # Stocker le token avec l'ID utilisateur et une expiration (5 minutes)
+    from datetime import datetime, timedelta
+    payment_tokens[payment_token] = {
+        "user_id": current_user.id,
+        "expires_at": datetime.utcnow() + timedelta(minutes=5)
+    }
+
+    return {
+        "payment_token": payment_token,
+        "expires_in": 300  # 5 minutes en secondes
+    }
+
+
+@router.post("/upgrade-premium", response_model=UserSchema)
+def upgrade_to_premium(
+    request: UpgradePremiumRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Upgrade l'utilisateur vers le rôle Premium/Riche après validation du token de paiement.
+    Cette route est appelée après le traitement du paiement.
+    """
+    # Vérifier si le token existe
+    if request.payment_token not in payment_tokens:
+        raise HTTPException(status_code=400, detail="Token de paiement invalide")
+
+    token_data = payment_tokens[request.payment_token]
+
+    # Vérifier si le token a expiré
+    from datetime import datetime
+    if datetime.utcnow() > token_data["expires_at"]:
+        del payment_tokens[request.payment_token]
+        raise HTTPException(status_code=400, detail="Token de paiement expiré")
+
+    # Vérifier que le token appartient bien à l'utilisateur actuel
+    if token_data["user_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Token de paiement invalide pour cet utilisateur")
+
+    # Vérifier si l'utilisateur n'est pas déjà premium
+    if current_user.role.lower() in ["riche", "premium"]:
+        del payment_tokens[request.payment_token]
+        raise HTTPException(status_code=400, detail="Vous avez déjà l'abonnement Premium")
+
+    # Upgrade le rôle à Riche
+    current_user.role = "Riche"
+    db.commit()
+    db.refresh(current_user)
+
+    # Supprimer le token après utilisation
+    del payment_tokens[request.payment_token]
+
+    return current_user

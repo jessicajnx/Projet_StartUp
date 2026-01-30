@@ -16,12 +16,12 @@ def check_conversation_limit(user: User, db: Session) -> None:
     """
     Vérifie si l'utilisateur a atteint sa limite d'échanges RÉELS.
     Les utilisateurs avec le rôle 'Pauvre' sont limités à 1 échange actif à la fois.
-    Les utilisateurs 'Premium' n'ont pas de limite.
+    Les utilisateurs 'Premium' ou 'Riche' n'ont pas de limite.
     Les conversations avec l'Assistant (propositions) ne comptent PAS dans la limite.
     Seuls les échanges RÉELS entre deux utilisateurs comptent.
     """
-    # Si l'utilisateur est premium, pas de limite
-    if user.role.lower() == "premium":
+    # Si l'utilisateur est premium ou riche, pas de limite
+    if user.role.lower() in ["premium", "riche"]:
         return
     
     # Pour les utilisateurs 'Pauvre', vérifier le nombre d'échanges RÉELS actifs

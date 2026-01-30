@@ -131,6 +131,9 @@ export default function Header({ hideAuthActions = false, isAdminPage = false }:
                     <span style={styles.badge}>{unreadCount}</span>
                   )}
                 </Link>
+                <Link href="/abonnement" style={styles.premiumButton}>
+                  ⭐ Abonnement
+                </Link>
                 <button onClick={handleLogout} style={styles.button}>
                   Déconnexion
                 </button>
@@ -218,5 +221,15 @@ const styles: Record<string, CSSProperties> = {
     marginLeft: '6px',
     position: 'relative' as const,
     top: '-2px',
+  } as React.CSSProperties,
+  premiumButton: {
+    textDecoration: 'none',
+    color: 'white',
+    padding: '0.5rem 1rem',
+    borderRadius: '10px',
+    transition: 'all 120ms ease',
+    fontWeight: 600,
+    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+    boxShadow: '0 4px 12px rgba(255,215,0,0.3)',
   } as React.CSSProperties,
 };
