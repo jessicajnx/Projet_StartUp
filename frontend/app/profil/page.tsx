@@ -40,6 +40,7 @@ export default function ProfilPage() {
   const [filteredLivres, setFilteredLivres] = useState<PersonalBook[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isAdminHeader, setIsAdminHeader] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState('');
@@ -82,6 +83,7 @@ export default function ProfilPage() {
           localStorage.setItem('userId', String(userId));
         }
         setUser(userData);
+        setIsAdminHeader(String(userData?.role).toLowerCase() === 'admin');
         setFormData({
           name: userData?.name ?? '',
           surname: userData?.surname ?? '',
@@ -238,7 +240,7 @@ export default function ProfilPage() {
   if (isLoading) {
     return (
       <div className={styles.container}>
-        <Header />
+        <Header isAdminPage={isAdminHeader} />
         <main className={styles.main}>
           <div className={styles.loadingContainer}>
             <p>Chargement...</p>
@@ -252,7 +254,7 @@ export default function ProfilPage() {
   if (error || !user) {
     return (
       <div className={styles.container}>
-        <Header />
+        <Header isAdminPage={isAdminHeader} />
         <main className={styles.main}>
           <div className={styles.errorContainer}>
             <h2>Erreur</h2>
@@ -266,7 +268,7 @@ export default function ProfilPage() {
 
   return (
     <div className={styles.container}>
-      <Header />
+      <Header isAdminPage={isAdminHeader} />
       <main className={styles.main}>
         <div className={styles.content}>
           <h1 className={styles.pageTitle}>Mon Profil</h1>
