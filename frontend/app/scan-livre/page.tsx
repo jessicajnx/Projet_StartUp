@@ -24,6 +24,7 @@ export default function ScanLivrePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [detectedBooks, setDetectedBooks] = useState<BookInfo[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -49,7 +50,7 @@ export default function ScanLivrePage() {
         return;
       }
 
-
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelectedImage(reader.result as string);
@@ -61,7 +62,7 @@ export default function ScanLivrePage() {
   };
 
   const handleAnalyze = async () => {
-    if (!fileInputRef.current?.files?.[0]) {
+    if (!selectedFile) {
       setError('Veuillez sélectionner une image');
       return;
     }
@@ -72,7 +73,7 @@ export default function ScanLivrePage() {
 
     try {
       const formData = new FormData();
-      formData.append('file', fileInputRef.current.files[0]);
+      formData.append('file', selectedFile);
 
       const response = await api.post('/ai/analyze-book', formData, {
         headers: {
@@ -145,6 +146,7 @@ export default function ScanLivrePage() {
 
   const handleReset = () => {
     setSelectedImage(null);
+    setSelectedFile(null);
     setDetectedBooks([]);
     setError('');
     if (fileInputRef.current) {
@@ -178,7 +180,7 @@ export default function ScanLivrePage() {
         return;
       }
 
-
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelectedImage(reader.result as string);
@@ -186,13 +188,6 @@ export default function ScanLivrePage() {
         setError('');
       };
       reader.readAsDataURL(file);
-
-
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-      if (fileInputRef.current) {
-        fileInputRef.current.files = dataTransfer.files;
-      }
     }
   };
 
@@ -415,7 +410,9 @@ const styles = {
     display: 'none',
   } as React.CSSProperties,
   uploadArea: {
-    border: '3px dashed #D4B59E',
+    borderWidth: '3px',
+    borderStyle: 'dashed',
+    borderColor: '#D4B59E',
     borderRadius: '8px',
     padding: '3rem',
     textAlign: 'center' as const,

@@ -40,6 +40,7 @@ export default function RootLayout({
       <body
         className="min-h-screen"
         style={{ background: "linear-gradient(135deg,#f7f2ea 0%,#f0e4d3 50%,#e8d8c4 100%)", color: "#2f241d" }}
+        suppressHydrationWarning
       >
         <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
         {children}

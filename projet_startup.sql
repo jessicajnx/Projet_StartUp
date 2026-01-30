@@ -118,39 +118,6 @@ VALUES
         NULL
     ),
     (
-        'Antoine',
-        'Rocq',
-        'Pauvre',
-        'Paris',
-        '$2b$12$yT0j0MEKD3/NFvXUNYxqCOVUqwnL3wuk1duHB03DN50pfiIJPh6kq',
-        'arocq@test.com',
-        20,
-        0,
-        NULL
-    ),
-    (
-        'Jess',
-        'Jaunaux',
-        'Pauvre',
-        'Paris',
-        '$2b$12$YPEO69dK.ZdgAiDkH1DUTeVlikkHfcYdqn8BsqPfAeRdck.Em4tMC',
-        'jess@test.com',
-        20,
-        0,
-        NULL
-    ),
-    (
-        'Jules',
-        'Saison',
-        'Pauvre',
-        'Paris',
-        '$2b$12$zE8HKvvNf3oHcX.715Wt2eyKT1qupEeEJGUNask9WI/t5uuHWz8f2',
-        'jules@test.com',
-        20,
-        0,
-        NULL
-    ),
-    (
         'Assistant',
         'Livre2Main',
         'System',
@@ -160,86 +127,6 @@ VALUES
         0,
         0,
         NULL
-    );
-
---
--- Déchargement des données de la table `livre`
---
-
-INSERT INTO `livre` (`Nom`, `Auteur`, `Genre`)
-VALUES
-    ('Proposition d\'échange', 'Système', 'Notification'),
-    ('1984', 'George Orwell', 'Science-fiction'),
-    ('Le Petit Prince', 'Antoine de Saint-Exupéry', 'Conte'),
-    ('Harry Potter à l\'école des sorciers', 'J.K. Rowling', 'Fantasy'),
-    ('L\'Étranger', 'Albert Camus', 'Philosophie'),
-    ('Le Seigneur des Anneaux', 'J.R.R. Tolkien', 'Fantasy'),
-    ('Dune', 'Frank Herbert', 'Science-fiction');
-
---
--- Déchargement des données de la table `bibliothequepersonnelle`
--- (Les livres personnels des utilisateurs)
---
-
-INSERT INTO `bibliothequepersonnelle` (`UserID`, `Title`, `Authors`, `CoverUrl`, `InfoLink`, `Description`, `Source`, `SourceID`, `CreatedAt`)
-VALUES
-    -- Livres d'Antoine Rocq (ID: 2)
-    (
-        2,
-        '1984',
-        '["George Orwell"]',
-        'https://books.google.com/books/content?id=kotPYEqx7kMC&printsec=frontcover&img=1&zoom=1',
-        'https://books.google.com/books?id=kotPYEqx7kMC',
-        'Un roman dystopique qui dépeint une société totalitaire où la liberté individuelle est étouffée par un État omniprésent.',
-        'google_books',
-        'kotPYEqx7kMC',
-        NOW()
-    ),
-    (
-        2,
-        'Le Petit Prince',
-        '["Antoine de Saint-Exupéry"]',
-        'https://books.google.com/books/content?id=LrAJAAAAQAAJ&printsec=frontcover&img=1&zoom=1',
-        'https://books.google.com/books?id=LrAJAAAAQAAJ',
-        'Un conte philosophique et poétique racontant l\'histoire d\'un petit prince venu d\'un astéroïde.',
-        'google_books',
-        'LrAJAAAAQAAJ',
-        NOW()
-    ),
-    -- Livres de Jess Jaunaux (ID: 3)
-    (
-        3,
-        'Harry Potter à l\'école des sorciers',
-        '["J.K. Rowling"]',
-        'https://books.google.com/books/content?id=wrOQLV6xB-wC&printsec=frontcover&img=1&zoom=1',
-        'https://books.google.com/books?id=wrOQLV6xB-wC',
-        'Le premier tome de la saga Harry Potter où un jeune sorcier découvre ses pouvoirs magiques.',
-        'google_books',
-        'wrOQLV6xB-wC',
-        NOW()
-    ),
-    (
-        3,
-        'L\'Étranger',
-        '["Albert Camus"]',
-        'https://books.google.com/books/content?id=WGlXJmr1q0YC&printsec=frontcover&img=1&zoom=1',
-        'https://books.google.com/books?id=WGlXJmr1q0YC',
-        'Un roman existentialiste racontant l\'histoire de Meursault, un homme détaché de la société.',
-        'google_books',
-        'WGlXJmr1q0YC',
-        NOW()
-    ),
-    -- Livres de Jules Saison (ID: 4)
-    (
-        4,
-        'Le Seigneur des Anneaux',
-        '["J.R.R. Tolkien"]',
-        'https://books.google.com/books/content?id=aWZzLPhY4o0C&printsec=frontcover&img=1&zoom=1',
-        'https://books.google.com/books?id=aWZzLPhY4o0C',
-        'Une épopée fantasy qui raconte la quête pour détruire un anneau maléfique et sauver la Terre du Milieu.',
-        'google_books',
-        'aWZzLPhY4o0C',
-        NOW()
     );
 
 DROP TABLE IF EXISTS `message`;

@@ -173,16 +173,22 @@ export default function MapComponent() {
         setUsersByCity(byCity);
 
         // Ajouter les nouveaux markers avec géocodage dynamique
-        if (map.current) {
+        if (map.current && map.current._leaflet_id) {
           for (const city of Object.keys(byCity)) {
             const coords = await getCityCoords(city);
-            if (!coords) continue;
+            if (!coords || !map.current) continue;
 
-            const marker = L.marker(coords).addTo(map.current);
-
-            marker.on('click', () => {
-              setSelectedCity(city);
-            });
+            try {
+              const marker = L.marker(coords);
+              if (map.current && map.current._leaflet_id) {
+                marker.addTo(map.current);
+                marker.on('click', () => {
+                  setSelectedCity(city);
+                });
+              }
+            } catch (err) {
+              console.warn('Erreur lors de l\'ajout du marker:', err);
+            }
           }
         }
       } catch (err) {
@@ -207,21 +213,24 @@ export default function MapComponent() {
           },
           body: JSON.stringify({
             target_user_id: parseInt(user.ID, 10),
-            book_id: parseInt(bookFilter, 10),
+            book_id: bookFilter,
             book_title: bookTitle,
           }),
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || 'Erreur lors de la proposition');
+          const errorMessage = data.detail || data.message || 'Erreur lors de la proposition';
+          throw new Error(errorMessage);
         }
 
         alert(`✅ Proposition d'échange envoyée pour le livre "${bookTitle}" !`);
         return;
       } catch (error) {
         console.error('Erreur lors de la proposition:', error);
-        alert(`❌ Erreur: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+        alert(`❌ ${errorMessage}`);
         return;
       }
     }

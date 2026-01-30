@@ -159,11 +159,11 @@ export default function Home() {
             <section className={styles.hero}>
               <div className={styles.heroContent}>
                 <div className={styles.heroImagePlaceholder}>
-                  <svg width="200" height="200" viewBox="0 0 200 200" fill="none">
-                    <rect x="40" y="40" width="120" height="120" rx="20" fill="#E5D7C6" stroke="#8B7355" strokeWidth="2" />
-                    <circle cx="80" cy="80" r="15" fill="#8B7355" />
-                    <path d="M60 150 L100 110 L140 150" stroke="#8B7355" strokeWidth="3" strokeLinecap="round" />
-                  </svg>
+                  <img
+                    src="/images/person-reading.jpg"
+                    alt="Personne lisant un livre"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '20px' }}
+                  />
                 </div>
                 <div className={styles.heroText}>
                   <h1 className={typographyStyles.heroTitle}>Livre2Main</h1>

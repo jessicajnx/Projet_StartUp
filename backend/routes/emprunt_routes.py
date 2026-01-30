@@ -117,7 +117,7 @@ def get_emprunts_emprunter(user_id: int, db: Session = Depends(get_db), current_
 
 class ProposeExchangeRequest(BaseModel):
     target_user_id: int
-    book_id: int
+    book_id: str
     book_title: str
 
 class ProposeBookExchangeRequest(BaseModel):

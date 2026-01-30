@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Body, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
-from models import Message, Emprunt, User, Livre
+from models import Message, Emprunt, User, Livre, BibliothequePersonnelle
 from schemas import (
     Message as MessageSchema,
     MessageCreate,
@@ -18,6 +18,11 @@ router = APIRouter(prefix="/messages", tags=["Messages"])
 
 
 class ProposalResponseData(BaseModel):
+    selected_book_id: Optional[int] = None
+    selected_book_title: Optional[str] = None
+
+class ProposalResponse(BaseModel):
+    response: str
     selected_book_id: Optional[int] = None
     selected_book_title: Optional[str] = None
 
@@ -278,13 +283,13 @@ def get_conversation_limit_status(
 
 
 @router.post("/proposal/{message_id}/respond")
-def respond_to_proposal(
+async def respond_to_proposal(
     message_id: int,
-    response: str,
-    body: ProposalResponseData = Body(default=None),
+    data: ProposalResponse,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    response = data.response
     if response not in ["accept", "reject"]:
         raise HTTPException(status_code=400, detail="Réponse invalide. Utilisez 'accept' ou 'reject'")
 
@@ -312,19 +317,34 @@ def respond_to_proposal(
 
     real_emprunt = None
     if response == "accept":
-        if proposal_type == "proposal" and body and body.selected_book_id:
+        if proposal_type == "proposal" and data.selected_book_id:
             check_conversation_limit(current_user, db)
             check_conversation_limit(proposer, db)
 
-            selected_livre = db.query(Livre).filter(Livre.id == body.selected_book_id).first()
+            selected_biblio_book = db.query(BibliothequePersonnelle).filter(
+                BibliothequePersonnelle.id == data.selected_book_id
+            ).first()
 
-            if not selected_livre:
-                raise HTTPException(status_code=404, detail="Livre sélectionné non trouvé")
+            if not selected_biblio_book:
+                raise HTTPException(status_code=404, detail="Livre sélectionné non trouvé dans votre bibliothèque")
+
+            livre = db.query(Livre).filter(
+                Livre.nom == selected_biblio_book.title
+            ).first()
+
+            if not livre:
+                livre = Livre(
+                    nom=selected_biblio_book.title,
+                    auteur=", ".join(selected_biblio_book.authors) if selected_biblio_book.authors else "Auteur inconnu",
+                    genre="Non spécifié"
+                )
+                db.add(livre)
+                db.flush()
 
             real_emprunt = Emprunt(
                 id_user1=proposer_id,
                 id_user2=current_user.id,
-                id_livre=selected_livre.id,
+                id_livre=livre.id,
                 datetime=datetime.utcnow()
             )
             db.add(real_emprunt)
@@ -358,8 +378,8 @@ def respond_to_proposal(
                         related_metadata = related.message_metadata.copy()
                         related_metadata["status"] = "accepted"
                         related_metadata["final_acceptance_time"] = datetime.utcnow().isoformat()
-                        related_metadata["selected_book_id"] = body.selected_book_id
-                        related_metadata["selected_book_title"] = body.selected_book_title
+                        related_metadata["selected_book_id"] = data.selected_book_id
+                        related_metadata["selected_book_title"] = data.selected_book_title
                         related.message_metadata = related_metadata
 
         elif is_book_proposal:
@@ -452,7 +472,7 @@ def respond_to_proposal(
         db.flush()
 
     book_title = metadata.get("book_title")
-    selected_book_title = body.selected_book_title if body else None
+    selected_book_title = data.selected_book_title if data.selected_book_title else None
     is_book_proposal = metadata.get("type") == "book_proposal"
 
     if response == "accept":

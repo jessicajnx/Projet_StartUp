@@ -126,22 +126,37 @@ export default function UserProfilPage() {
   };
 
   const handleAcceptExchange = async () => {
-    if (!selectedBookId || !messageId) return;
+    if (!selectedBookId || !messageId) {
+      alert('Veuillez sélectionner un livre');
+      return;
+    }
     
     try {
+      console.log('selectedBookId:', selectedBookId);
+      console.log('messageId:', messageId, 'type:', typeof messageId);
+      console.log('livres:', livres);
+      
       const selectedBook = livres.find(b => b.id === selectedBookId);
-      if (!selectedBook) throw new Error('Livre non trouvé');
+      console.log('selectedBook found:', selectedBook);
+      
+      if (!selectedBook) {
+        throw new Error(`Livre sélectionné non trouvé. ID recherché: ${selectedBookId}`);
+      }
       
       const token = localStorage.getItem('token');
       const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
-      const response = await fetch(`${API_URL}/messages/proposal/${messageId}/respond?response=accept`, {
+      const url = `${API_URL}/messages/proposal/${messageId}/respond`;
+      console.log('URL complète:', url);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
+          response: 'accept',
           selected_book_id: selectedBookId,
           selected_book_title: selectedBook.title,
         }),
@@ -170,11 +185,15 @@ export default function UserProfilPage() {
       const token = localStorage.getItem('token');
       const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
-      const response = await fetch(`${API_URL}/messages/proposal/${messageId}/respond?response=reject`, {
+      const response = await fetch(`${API_URL}/messages/proposal/${messageId}/respond`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          response: 'reject'
+        }),
       });
 
       if (!response.ok) {
